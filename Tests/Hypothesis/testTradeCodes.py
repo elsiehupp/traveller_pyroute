@@ -4,8 +4,7 @@ from datetime import timedelta
 from hypothesis import given, assume, example, HealthCheck, settings
 from hypothesis.strategies import text, from_regex, composite, sampled_from, lists, floats, booleans
 
-from PyRoute.Galaxy import Sector
-from PyRoute.Inputs.ParseStarInput import ParseStarInput
+from PyRoute.AreaItems.Sector import Sector
 from PyRoute.TradeCodes import TradeCodes
 from PyRoute.Star import Star
 from PyRoute.SystemData.UWP import UWP
@@ -108,6 +107,7 @@ class testTradeCodes(unittest.TestCase):
     @example('A655000-0', '000000000000000')
     @example('A000000-0', 'Ba')
     @example('ABDA000-0', '000000000000000')
+    @example('?d20000-0', 'An Cw')
     def test_verify_canonicalisation_is_idempotent(self, s, trade_line):
         s = s[0:9]
         if isinstance(trade_line, list):

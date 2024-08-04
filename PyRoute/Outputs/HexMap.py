@@ -11,7 +11,8 @@ from pypdflite.pdfobjects.pdfline import PDFLine
 from pypdflite.pdfobjects.pdfellipse import PDFEllipse
 from pypdflite.pdfobjects.pdftext import PDFText
 
-from PyRoute.Galaxy import Sector, Galaxy
+from PyRoute.AreaItems.Galaxy import Galaxy
+from PyRoute.AreaItems.Sector import Sector
 from PyRoute.Position.Hex import Hex
 from PyRoute.Star import Star
 from PyRoute.StatCalculation import StatCalculation
@@ -32,6 +33,8 @@ class HexMap(object):
         self.min_btn = min_btn
         self.y_start = 43
         self.x_start = 15
+        self.sector = None
+        self.writer = None
 
     def write_maps(self):
         """
@@ -513,6 +516,12 @@ class HexMap(object):
                   zip(line_pt_1, line_pt_2)]
         logging.getLogger("PyRoute.HexMap").debug(result)
         return (result[0], result[1]), (result[2], result[3])
+
+    @property
+    def compression(self):
+        if self.writer is None:
+            return True
+        return self.writer.session.compression
 
 
 if __name__ == '__main__':

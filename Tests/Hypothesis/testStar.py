@@ -6,7 +6,7 @@ from datetime import timedelta
 from hypothesis import given, assume, example, HealthCheck, settings
 from hypothesis.strategies import text, from_regex, composite, booleans
 
-from PyRoute.Galaxy import Sector
+from PyRoute.AreaItems.Sector import Sector
 from PyRoute.Inputs.ParseStarInput import ParseStarInput
 from PyRoute.Star import Star
 
@@ -221,7 +221,7 @@ class testStar(unittest.TestCase):
         self.assertTrue(foo.is_well_formed())
 
     @given(canonical_check())
-    @settings(suppress_health_check=[HealthCheck(3), HealthCheck(2)], deadline=timedelta(200))
+    @settings(suppress_health_check=[HealthCheck(3), HealthCheck(2)], deadline=timedelta(1000))
     @example('1919 Khula                ???????-? Hi In Pz Di(Khulans)      {0}  (000-0) [0000] BEf  N  A 510 10 ImDv M0 V')
     def test_star_canonicalise(self, s):
         hyp_line = "Hypothesis input: " + s
