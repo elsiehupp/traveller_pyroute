@@ -187,14 +187,17 @@ class testLandmarksExtremes(baseTest):
         galaxy.generate_routes()
         galaxy.trade.calculate_components()
 
+        btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True) if s.component == n.component]
+        btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
+
         expected_components = defaultdict(set)
-        expected_components[0] = {129, 6, 520, 138, 555, 427, 558}
+        expected_components[0] = {129, 165, 6, 138, 555, 427, 558}
         expected_components[2] = {426, 423}
 
-        expected_landmarks = [{0: 555, 2: 426}, {0: 558, 2: 423}, {0: 129}, {0: 138}, {0: 6}, {0: 427}, {0: 520}]
+        expected_landmarks = [{0: 555, 2: 426}, {0: 558, 2: 423}, {0: 129}, {0: 138}, {0: 6}, {0: 427}, {0: 165}]
 
         foo = LandmarksTriaxialExtremes(galaxy)
-        landmarks, actual = foo.get_landmarks()
+        landmarks, actual = foo.get_landmarks(btn=btn)
         self.assertEqual(expected_components, actual)
         self.assertEqual(expected_landmarks, landmarks)
 
