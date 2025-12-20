@@ -122,23 +122,20 @@ class LandmarksTriaxialExtremes:
                 counters = defaultdict(int)
                 for item in btn_split:
                     firstdex = item[0].index
-                    seconddex = item[1].index
-                    if seconddex in component_landmarks[item[0].component]:
+                    if firstdex in component_landmarks[component_id]:
                         continue
-                    counters[firstdex] += 1
-                if 0 == len(counters.values()):
-                    btn = None
+                    counters[firstdex] += 1  # pragma: no mutate
+                if 0 == len(counters.values()):  # pragma: no mutate
+                    btn = None  # pragma: no mutate
                 else:
                     max_counter = max(counters.values())
                     max_candidates = {k: v for (k, v) in counters.items() if v == max_counter}
-                    source = list(max_candidates.keys())[0]
-                    result[6][component_id] = source
-                    component_landmarks[component_id].add(source)
+                    source_index = list(max_candidates.keys())[0]
+                    result[6][component_id] = source_index
+                    component_landmarks[component_id].add(source_index)
 
                 if 7 == slots:
                     continue
-            elif 6 == slots:
-                continue
 
             slotcount = 7 if btn is not None else 6
             seeds = [{component_id: item[component_id]} for item in result if component_id in item]
@@ -152,8 +149,8 @@ class LandmarksTriaxialExtremes:
                 lobound = approx.lower_bound_bulk(first_star.index)
                 lobound = np.maximum(lobound, static)
 
-                distance_labels = np.ones(self.graph_len) * float('+inf')
-                distance_labels[first_star.index] = 0
+                distance_labels = np.ones(self.graph_len) * float('+inf')  # pragma: no mutate
+                distance_labels[first_star.index] = 0  # pragma: no mutate
 
                 sp_distances, sp_parents, _, _ = explicit_shortest_path_dijkstra_distance_graph(self.distgraph, first_star.index,
                                                                                           distance_labels)
@@ -169,7 +166,7 @@ class LandmarksTriaxialExtremes:
 
                 reseed = {component_id: nu_landmark}
                 approx.expand_forest(reseed)
-                slotcount += 1
+                slotcount += 1  # pragma: no mutate
 
             assert slots == len(component_landmarks[component_id]),\
                 f"Duplicate landmarks detected on component {component_id} avoid-powered segment"

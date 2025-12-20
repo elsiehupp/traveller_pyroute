@@ -363,11 +363,13 @@ class SectorDictionary(dict):
                 handle.write(line)
 
     @staticmethod
-    def load_traveller_map_file(filename) -> Optional[Sector]:
+    def load_traveller_map_file(filename, maxlines:Optional[int] = None) -> Optional["SectorDictionary"]:
         from PyRoute.Inputs.ParseSectorInput import ParseSectorInput
         basename = os.path.basename(filename)
         logger = logging.getLogger('PyRoute.DeltaDictionary')
         headers, starlines = ParseSectorInput.read_sector_file(filename, logger)
+        if isinstance(maxlines, int) and 0 < maxlines:
+            starlines = starlines[0:maxlines]
 
         if 0 == len(headers):
             return None

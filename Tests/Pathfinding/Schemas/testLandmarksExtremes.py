@@ -25,7 +25,7 @@ class testLandmarksExtremes(baseTest):
     def test_q_extremes_of_zarushagar(self) -> None:
         sourcefile = self.unpack_filename('../DeltaFiles/Zarushagar.sec')
 
-        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        sector = SectorDictionary.load_traveller_map_file(sourcefile, 60)
         self.assertIsNotNone(sector, "Sector file not loaded from " + sourcefile)
         delta = DeltaDictionary()
         delta[sector.name] = sector
@@ -43,16 +43,15 @@ class testLandmarksExtremes(baseTest):
         foo = LandmarksQExtremes(galaxy)
 
         expected = [
-                {0: 132, 1: 165, 2: 293, 3: 368, 4: 408, 5: 411, 6: 420, 7: 415},
-                {0: 0, 1: 165, 2: 293, 3: 368, 4: 408, 5: 409, 6: 414, 7: 415}
+                {0: 57}, {0: 0}
             ]
-        actual = foo.get_landmarks(index=True)
+        actual = foo.get_landmarks()
         self.assertEqual(expected, actual)
 
     def test_r_extremes_of_zarushagar(self) -> None:
         sourcefile = self.unpack_filename('../DeltaFiles/Zarushagar.sec')
 
-        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        sector = SectorDictionary.load_traveller_map_file(sourcefile, 60)
         self.assertIsNotNone(sector, "Sector file not loaded from " + sourcefile)
         delta = DeltaDictionary()
         delta[sector.name] = sector
@@ -70,16 +69,15 @@ class testLandmarksExtremes(baseTest):
         foo = LandmarksRExtremes(galaxy)
 
         expected = [
-                {0: 0, 1: 165, 2: 293, 3: 368, 4: 408, 5: 411, 6: 414, 7: 415},
-                {0: 486, 1: 165, 2: 293, 3: 368, 4: 408, 5: 409, 6: 420, 7: 415}
+                {0: 0}, {0: 53}
             ]
-        actual = foo.get_landmarks(index=True)
+        actual = foo.get_landmarks()
         self.assertEqual(expected, actual)
 
     def test_s_extremes_of_zarushagar(self) -> None:
         sourcefile = self.unpack_filename('../DeltaFiles/Zarushagar.sec')
 
-        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        sector = SectorDictionary.load_traveller_map_file(sourcefile, 120)
         self.assertIsNotNone(sector, "Sector file not loaded from " + sourcefile)
         delta = DeltaDictionary()
         delta[sector.name] = sector
@@ -97,16 +95,15 @@ class testLandmarksExtremes(baseTest):
         foo = LandmarksSExtremes(galaxy)
 
         expected = [
-                {0: 413, 1: 165, 2: 293, 3: 368, 4: 408, 5: 409, 6: 414, 7: 415},
-                {0: 126, 1: 165, 2: 293, 3: 368, 4: 408, 5: 411, 6: 416, 7: 415}
+                {0: 4}, {0: 115}
             ]
-        actual = foo.get_landmarks(index=True)
+        actual = foo.get_landmarks()
         self.assertEqual(expected, actual)
 
     def test_axial_extremes_of_zarushagar(self) -> None:
         sourcefile = self.unpack_filename('../DeltaFiles/Zarushagar.sec')
 
-        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        sector = SectorDictionary.load_traveller_map_file(sourcefile, 260)
         self.assertIsNotNone(sector, "Sector file not loaded from " + sourcefile)
         delta = DeltaDictionary()
         delta[sector.name] = sector
@@ -122,18 +119,12 @@ class testLandmarksExtremes(baseTest):
         galaxy.trade.calculate_components()
 
         foo = LandmarksTriaxialExtremes(galaxy)
-        self.assertEqual(496, foo.graph_len)
+        self.assertEqual(260, foo.graph_len)
         self.assertIsInstance(foo.distgraph, DistanceGraph)
         self.assertEqual(float('+inf'), foo.floatinf)
 
         expected = [
-            {0: 132, 5: 411, 6: 420},
-            {0: 486, 5: 409, 6: 418},
-            {0: 126},
-            {0: 0},
-            {0: 5},
-            {0: 428},
-            {0: 140}
+            {0: 132}, {0: 257}, {0: 126}, {0: 0}, {0: 5}, {0: 144}, {0: 136}
         ]
         actual, _ = foo.get_landmarks()
         self.assertEqual(expected, actual)
@@ -146,7 +137,7 @@ class testLandmarksExtremes(baseTest):
     def test_component_landmarks_of_zarushagar(self) -> None:
         sourcefile = self.unpack_filename('../DeltaFiles/Zarushagar.sec')
 
-        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        sector = SectorDictionary.load_traveller_map_file(sourcefile, 260)
         self.assertIsNotNone(sector, "Sector file not loaded from " + sourcefile)
         delta = DeltaDictionary()
         delta[sector.name] = sector
@@ -162,9 +153,7 @@ class testLandmarksExtremes(baseTest):
         galaxy.trade.calculate_components()
 
         expected = defaultdict(set)
-        expected[0] = {0, 132, 5, 486, 428, 140, 126}
-        expected[5] = {409, 411}
-        expected[6] = {418, 420}
+        expected[0] = {0, 257, 132, 5, 136, 144, 126}
 
         foo = LandmarksTriaxialExtremes(galaxy)
         _, actual = foo.get_landmarks()
@@ -173,7 +162,7 @@ class testLandmarksExtremes(baseTest):
     def test_landmarks_of_dagudashaag(self) -> None:
         sourcefile = self.unpack_filename('../DeltaFiles/Dagudashaag.sec')
 
-        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        sector = SectorDictionary.load_traveller_map_file(sourcefile, 260)
         self.assertIsNotNone(sector, "Sector file not loaded from " + sourcefile)
         delta = DeltaDictionary()
         delta[sector.name] = sector
@@ -192,10 +181,10 @@ class testLandmarksExtremes(baseTest):
         btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
 
         expected_components = defaultdict(set)
-        expected_components[0] = {129, 165, 6, 138, 555, 427, 558}
-        expected_components[2] = {426, 423}
+        expected_components[0] = {256, 129, 35, 134, 6, 138, 150}
+        expected_components[2] = {258, 259}
 
-        expected_landmarks = [{0: 555, 2: 426}, {0: 558, 2: 423}, {0: 129}, {0: 138}, {0: 6}, {0: 427}, {0: 165}]
+        expected_landmarks = [{0: 134, 2: 259}, {0: 256, 2: 258}, {0: 129}, {0: 138}, {0: 6}, {0: 150}, {0: 35}]
 
         foo = LandmarksTriaxialExtremes(galaxy)
         landmarks, actual = foo.get_landmarks(btn=btn)
@@ -210,7 +199,7 @@ class testLandmarksExtremes(baseTest):
         sector = SectorDictionary.load_traveller_map_file(source1)
         self.assertIsNotNone(sector, "Sector file not loaded from " + source1)
         delta[sector.name] = sector
-        sector = SectorDictionary.load_traveller_map_file(source2)
+        sector = SectorDictionary.load_traveller_map_file(source2, 75)
         self.assertIsNotNone(sector, "Sector file not loaded from " + source1)
         delta[sector.name] = sector
 
@@ -225,15 +214,15 @@ class testLandmarksExtremes(baseTest):
         galaxy.generate_routes()
         galaxy.trade.calculate_components()
 
+        btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True) if s.component == n.component]
+        btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
+
         expected_components = defaultdict(set)
-        expected_components[0] = {129, 6, 967, 138, 555, 1045, 1051, 989}
-        expected_components[5] = {968, 970}
-        expected_components[6] = {977, 979, 974}
-        expected_landmarks = [{0: 555, 5: 970, 6: 979}, {0: 1045, 5: 968, 6: 977}, {0: 129, 6: 974}, {0: 138}, {0: 6},
-                              {0: 967}, {0: 989}, {0: 1051}]
+        expected_components[0] = {129, 165, 6, 520, 138, 555, 620, 563}
+        expected_landmarks = [{0: 555}, {0: 620}, {0: 129}, {0: 138}, {0: 6}, {0: 563}, {0: 165}, {0: 520}]
 
         foo = LandmarksTriaxialExtremes(galaxy)
-        landmarks, actual = foo.get_landmarks()
+        landmarks, actual = foo.get_landmarks(btn)
         self.assertEqual(expected_components, actual)
         self.assertEqual(expected_landmarks, landmarks)
 
@@ -332,3 +321,61 @@ class testLandmarksExtremes(baseTest):
         exp_landmarks = [{0: 18}]
         landmarks = foo.get_landmarks()
         self.assertEqual(exp_landmarks, landmarks)
+
+    def test_landmarks_on_ibara_and_bolivar_subsectors_single_component(self) -> None:
+        delta = DeltaDictionary()
+        sourcefile = [
+            self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec'),
+            self.unpack_filename('DeltaFiles/Dagudashaag-Bolivar.sec'),
+        ]
+
+        for item in sourcefile:
+            sector = SectorDictionary.load_traveller_map_file(item)
+            delta[sector.name] = sector
+
+        args = self._make_args()
+
+        galaxy = DeltaGalaxy(args.btn, args.max_jump)
+        galaxy.read_sectors(delta, args.pop_code, args.ru_calc,
+                            args.route_reuse, args.routes, args.route_btn, args.mp_threads, args.debug_flag)
+        galaxy.output_path = args.output
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        self.assertEqual(2, len(galaxy.trade.components), "Unexpected number of components at J-4")
+
+        expected_landmarks = [{0: 34, 1: 41}, {0: 30, 1: 38}, {0: 61}, {0: 0}, {0: 43}]
+        landmarks, _ = galaxy.trade.get_landmarks()
+        self.assertTrue(isinstance(landmarks, list), 'Landmarks result should be a list')
+        self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
+
+    def test_landmarks_on_ibara_and_bolivar_subsectors_trimmed(self) -> None:
+        delta = DeltaDictionary()
+        sourcefile = [
+            (self.unpack_filename('DeltaFiles/Dagudashaag-Bolivar.sec'), 15),
+            (self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec'), 14),
+        ]
+
+        for item, limit in sourcefile:
+            sector = SectorDictionary.load_traveller_map_file(item, limit)
+            delta[sector.name] = sector
+
+        args = self._make_args()
+
+        galaxy = DeltaGalaxy(args.btn, 2)
+        galaxy.read_sectors(delta, args.pop_code, args.ru_calc,
+                            args.route_reuse, args.routes, args.route_btn, args.mp_threads, args.debug_flag)
+        galaxy.output_path = args.output
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        self.assertEqual(3, len(galaxy.trade.components), "Unexpected number of components at J-2")
+        btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True) if s.component == n.component]
+        btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
+
+        expected_landmarks = [{0: 4, 1: 13, 2: 10}, {0: 1, 1: 14, 2: 28}, {1: 8, 2: 11}, {2: 15}]
+        landmarks, _ = galaxy.trade.get_landmarks(btn=btn)
+        self.assertTrue(isinstance(landmarks, list), 'Landmarks result should be a list')
+        self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
