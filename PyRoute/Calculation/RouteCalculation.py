@@ -240,7 +240,7 @@ class RouteCalculation(object):
                 self.galaxy.star_mapping[star].component = counter
         return
 
-    def get_landmarks(self, index=False, btn=None) -> tuple[list[dict], defaultdict[Any, set]]:
+    def get_landmarks(self, btn=None) -> tuple[list[dict], defaultdict[Any, set]]:
         schema = LandmarksTriaxialExtremes(self.galaxy)
         return schema.get_landmarks(btn=btn)
 
