@@ -100,7 +100,7 @@ class testTradeCalculation(baseTest):
 
         btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True)]
         btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
-        landmarks, galaxy.trade.component_landmarks = galaxy.trade.get_landmarks(index=True, btn=btn)
+        landmarks, galaxy.trade.component_landmarks = galaxy.trade.get_landmarks(btn=btn)
 
         btn_dex = 12
         star_dex = btn[btn_dex][0].index

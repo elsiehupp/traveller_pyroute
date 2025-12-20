@@ -16,9 +16,13 @@ class UnpackFilename(object):
         if not os.path.isfile(sourcefile):
             sourcefile = os.path.abspath('../' + filename)
         if not os.path.isfile(sourcefile):
+            sourcefile = os.path.abspath('../../' + filename)
+        if not os.path.isfile(sourcefile):
             sourcefile = os.path.abspath('Tests/' + filename)
         if not os.path.isfile(sourcefile):
             sourcefile = os.path.abspath('../Tests/' + filename)
+        if not os.path.isfile(sourcefile):
+            sourcefile = os.path.abspath('../../Tests/' + filename)
         if not os.path.isfile(sourcefile):
             sourcefile = os.path.abspath('Tests/Tests/' + filename)
         if not os.path.isfile(sourcefile):

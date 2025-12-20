@@ -242,7 +242,7 @@ class RouteCalculation(object):
 
     def get_landmarks(self, index=False, btn=None) -> tuple[list[dict], defaultdict[Any, set]]:
         schema = LandmarksTriaxialExtremes(self.galaxy)
-        return schema.get_landmarks(index, btn=btn)
+        return schema.get_landmarks(btn=btn)
 
     def unilateral_filter(self, star) -> bool:
         """
