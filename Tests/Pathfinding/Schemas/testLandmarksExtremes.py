@@ -12,6 +12,7 @@ from PyRoute.Pathfinding.LandmarkSchemes.LandmarksQExtremes import LandmarksQExt
 from PyRoute.Pathfinding.LandmarkSchemes.LandmarksRExtremes import LandmarksRExtremes
 from PyRoute.Pathfinding.LandmarkSchemes.LandmarksSExtremes import LandmarksSExtremes
 from PyRoute.Pathfinding.LandmarkSchemes.LandmarksTriaxialExtremes import LandmarksTriaxialExtremes
+from PyRoute.Pathfinding.LandmarkSchemes.LandmarksWTNExtremes import LandmarksWTNExtremes
 from PyRoute.Inputs.ParseStarInput import ParseStarInput
 from Tests.baseTest import baseTest
 
@@ -308,3 +309,26 @@ class testLandmarksExtremes(baseTest):
         landmarks, _ = galaxy.trade.get_landmarks()
         self.assertEqual(4, len(landmarks), 'Should have one landmark per component')
         self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
+
+    def test_wtn_landmarks_on_ibara_subsector_single_component(self) -> None:
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+
+        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        self.assertIsNotNone(sector, "Sector file not loaded from " + sourcefile)
+        delta = DeltaDictionary()
+        delta[sector.name] = sector
+
+        args = self._make_args()
+
+        galaxy = DeltaGalaxy(args.btn, args.max_jump)
+        galaxy.read_sectors(delta, args.pop_code, args.ru_calc,
+                            args.route_reuse, args.routes, args.route_btn, args.mp_threads, args.debug_flag)
+        galaxy.output_path = args.output
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        foo = LandmarksWTNExtremes(galaxy)
+        exp_landmarks = [{0: 18}]
+        landmarks = foo.get_landmarks()
+        self.assertEqual(exp_landmarks, landmarks)
