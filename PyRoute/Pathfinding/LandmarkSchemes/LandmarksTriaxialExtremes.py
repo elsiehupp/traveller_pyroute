@@ -115,7 +115,7 @@ class LandmarksTriaxialExtremes:
             assert 6 == len(component_landmarks[component_id]),\
                 f"Duplicate landmarks detected on component {component_id} late segment"
             if 6 == slots:
-                continue
+                continue  # pragma: no mutate
 
             if btn is not None:
                 btn_split = [(s, n, d) for (s, n, d) in btn if s.component == component_id]
