@@ -37,7 +37,7 @@ class testLandmarksExtremesRegression(baseTest):
 
         foo = LandmarksTriaxialExtremes(galaxy)
         expected = [
-            {0: 56}, {0: 95}, {0: 43}, {0: 59}, {0: 0}
+            {0: 56}, {0: 95}, {0: 43}, {0: 59}, {0: 0}, {0: 68}
         ]
         actual, _ = foo.get_landmarks(btn=btn)
         self.assertEqual(expected, actual)

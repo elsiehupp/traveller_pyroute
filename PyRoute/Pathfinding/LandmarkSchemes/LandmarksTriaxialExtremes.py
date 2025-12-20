@@ -143,7 +143,7 @@ class LandmarksTriaxialExtremes:
             slotcount = 7 if btn is not None else 6
             seeds = [{component_id: item[component_id]} for item in result if component_id in item]
             assert slotcount == len(seeds), f"S-t transpose-trigger landmark skipped in component {component_id}"
-            approx = ApproximateShortestPathForestUnified(source, self.galaxy.stars, epsilon=self.galaxy.trade.epsilon, sources=seeds)
+            approx = ApproximateShortestPathForestUnified(source.index, self.galaxy.stars, epsilon=self.galaxy.trade.epsilon, sources=seeds)
             distances = self.galaxy.trade.star_graph.distances_from_target(all_nodes, first_star.index)
             min_cost = self.galaxy.trade.star_graph.min_cost(first_star.index)
             static = np.maximum(distances, min_cost)
@@ -155,7 +155,7 @@ class LandmarksTriaxialExtremes:
                 distance_labels = np.ones(self.graph_len) * float('+inf')
                 distance_labels[first_star.index] = 0
 
-                sp_distances, sp_parents, _ = explicit_shortest_path_dijkstra_distance_graph(self.distgraph, first_star.index,
+                sp_distances, sp_parents, _, _ = explicit_shortest_path_dijkstra_distance_graph(self.distgraph, first_star.index,
                                                                                           distance_labels)
                 inf_set = self.floatinf == sp_distances
                 sp_distances[inf_set] = 0
@@ -178,4 +178,4 @@ class LandmarksTriaxialExtremes:
 
     @staticmethod
     def _size_to_landmarks(size):
-        return math.ceil(2 * math.log10(size))
+        return math.ceil(2.5 * math.log10(size))

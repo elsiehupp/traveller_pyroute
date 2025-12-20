@@ -39,7 +39,7 @@ class testApproximateShortestPathForest(baseTest):
         source = stars[0]
 
         approx = ApproximateShortestPathForestUnified(source, graph, 0.2, sources=landmarks)
-        self.assertEqual(6, approx.num_trees)
+        self.assertEqual(7, approx.num_trees)
 
         active_nodes = [2, 80]
         target = 80
@@ -60,7 +60,7 @@ class testApproximateShortestPathForest(baseTest):
         source = stars[0]
 
         approx = ApproximateShortestPathForestUnified(source, graph, 0.2, sources=landmarks)
-        self.assertEqual(6, approx.num_trees)
+        self.assertEqual(7, approx.num_trees)
 
     def test_unified_can_handle_bulk_lobound_from_singleton_component(self) -> None:
         galaxy = self.set_up_zarushagar_sector()

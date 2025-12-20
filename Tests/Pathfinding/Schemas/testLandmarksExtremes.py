@@ -127,17 +127,18 @@ class testLandmarksExtremes(baseTest):
 
         expected = [
             {0: 132, 5: 411, 6: 420},
-            {0: 486, 6: 418},
+            {0: 486, 5: 409, 6: 418},
             {0: 126},
             {0: 0},
             {0: 5},
             {0: 428},
+            {0: 140}
         ]
         actual, _ = foo.get_landmarks()
         self.assertEqual(expected, actual)
 
         actual, _ = foo.get_landmarks()
-        self.assertEqual(6, len(actual))
+        self.assertEqual(7, len(actual))
         chunk = actual[3]
         self.assertEqual(0, chunk[0])
 
@@ -160,8 +161,8 @@ class testLandmarksExtremes(baseTest):
         galaxy.trade.calculate_components()
 
         expected = defaultdict(set)
-        expected[0] = {0, 132, 5, 486, 428, 126}
-        expected[5] = {411}
+        expected[0] = {0, 132, 5, 486, 428, 140, 126}
+        expected[5] = {409, 411}
         expected[6] = {418, 420}
 
         foo = LandmarksTriaxialExtremes(galaxy)
@@ -187,10 +188,10 @@ class testLandmarksExtremes(baseTest):
         galaxy.trade.calculate_components()
 
         expected_components = defaultdict(set)
-        expected_components[0] = {129, 6, 138, 555, 427, 558}
+        expected_components[0] = {129, 6, 520, 138, 555, 427, 558}
         expected_components[2] = {426, 423}
 
-        expected_landmarks = [{0: 555, 2: 426}, {0: 558, 2: 423}, {0: 129}, {0: 138}, {0: 6}, {0: 427}]
+        expected_landmarks = [{0: 555, 2: 426}, {0: 558, 2: 423}, {0: 129}, {0: 138}, {0: 6}, {0: 427}, {0: 520}]
 
         foo = LandmarksTriaxialExtremes(galaxy)
         landmarks, actual = foo.get_landmarks()
@@ -221,11 +222,11 @@ class testLandmarksExtremes(baseTest):
         galaxy.trade.calculate_components()
 
         expected_components = defaultdict(set)
-        expected_components[0] = {129, 6, 967, 138, 555, 1045, 989}
-        expected_components[5] = {970}
-        expected_components[6] = {977, 979}
-        expected_landmarks = [{0: 555, 5: 970, 6: 979}, {0: 1045, 6: 977}, {0: 129}, {0: 138}, {0: 6}, {0: 967},
-                              {0: 989}]
+        expected_components[0] = {129, 6, 967, 138, 555, 1045, 1051, 989}
+        expected_components[5] = {968, 970}
+        expected_components[6] = {977, 979, 974}
+        expected_landmarks = [{0: 555, 5: 970, 6: 979}, {0: 1045, 5: 968, 6: 977}, {0: 129, 6: 974}, {0: 138}, {0: 6},
+                              {0: 967}, {0: 989}, {0: 1051}]
 
         foo = LandmarksTriaxialExtremes(galaxy)
         landmarks, actual = foo.get_landmarks()
@@ -300,7 +301,7 @@ class testLandmarksExtremes(baseTest):
 
         self.assertEqual(6, len(galaxy.trade.components), "Unexpected number of components at J-1")
 
-        expected_landmarks = [{0: 29, 2: 13, 4: 34}, {0: 26, 2: 4, 4: 36}, {0: 19}]
+        expected_landmarks = [{0: 29, 2: 13, 4: 34}, {0: 26, 2: 4, 4: 36}, {0: 19, 4: 27}, {0: 0}]
         landmarks, _ = galaxy.trade.get_landmarks()
-        self.assertEqual(3, len(landmarks), 'Should have one landmark per component')
+        self.assertEqual(4, len(landmarks), 'Should have one landmark per component')
         self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
