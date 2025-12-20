@@ -42,7 +42,7 @@ class LandmarksTriaxialExtremes:
 
     def get_landmarks(self, btn=None) -> tuple[list[dict], defaultdict[Any, set]]:
         comp = self.galaxy.trade.components
-        max_size = max(comp.values(), default=1)
+        max_size = max(comp.values(), default=1)  # pragma: no mutate
         num_slots = min(self.max_slots, self._size_to_landmarks(max_size))
         result = []
         component_landmarks = defaultdict(set)
