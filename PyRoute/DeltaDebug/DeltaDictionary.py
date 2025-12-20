@@ -109,6 +109,14 @@ class DeltaDictionary(dict):
 
         return result
 
+    @property
+    def lines_count(self) -> int:
+        result: int = 0
+        for sub_name in self.keys():
+            result += len(self[sub_name].lines)
+
+        return result
+
     def drop_lines(self, lines_to_drop) -> "DeltaDictionary":
         foo = DeltaDictionary()
         for sector_name in self:

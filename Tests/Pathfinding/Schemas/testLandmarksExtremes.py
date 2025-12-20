@@ -299,6 +299,63 @@ class testLandmarksExtremes(baseTest):
         self.assertEqual(4, len(landmarks), 'Should have one landmark per component')
         self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
 
+    def test_landmarks_on_ibara_subsector_multiple_components_btn_supplied(self) -> None:
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+
+        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        delta = DeltaDictionary()
+        delta[sector.name] = sector
+
+        args = self._make_args()
+        args.max_jump = 1
+
+        galaxy = DeltaGalaxy(args.btn, args.max_jump)
+        galaxy.read_sectors(delta, args.pop_code, args.ru_calc,
+                            args.route_reuse, args.routes, args.route_btn, args.mp_threads, args.debug_flag)
+        galaxy.output_path = args.output
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True) if s.component == n.component]
+        btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
+
+        self.assertEqual(6, len(galaxy.trade.components), "Unexpected number of components at J-1")
+
+        expected_landmarks = [{0: 29, 2: 13, 4: 34}, {0: 26, 2: 4, 4: 36}, {0: 19, 4: 27}, {0: 9}]
+        landmarks, _ = galaxy.trade.get_landmarks(btn=btn)
+        self.assertEqual(4, len(landmarks), 'Should have one landmark per component')
+        self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
+
+    def test_landmarks_on_ibara_subsector_two_doubleton_components(self) -> None:
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+
+        sector = SectorDictionary.load_traveller_map_file(sourcefile)
+        ibaru = sector['Ibaru']
+        items = ibaru.items
+        nu_lines = [items[1], items[2], items[35], items[36]]
+        ibaru.items = nu_lines
+
+        delta = DeltaDictionary()
+        delta[sector.name] = sector
+        self.assertEqual(4, delta.lines_count)
+
+        args = self._make_args()
+        args.max_jump = 3
+
+        galaxy = DeltaGalaxy(args.btn, args.max_jump)
+        galaxy.read_sectors(delta, args.pop_code, args.ru_calc,
+                            args.route_reuse, args.routes, args.route_btn, args.mp_threads, args.debug_flag)
+        galaxy.output_path = args.output
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        self.assertEqual(2, len(galaxy.trade.components), "Unexpected number of components at J-3")
+
+        expected_landmarks = [{0: 1, 1: 2}]
+        landmarks, _ = galaxy.trade.get_landmarks()
+        self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
+
     def test_wtn_landmarks_on_ibara_subsector_single_component(self) -> None:
         sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
 
