@@ -436,3 +436,25 @@ class testLandmarksExtremes(baseTest):
         landmarks, _ = galaxy.trade.get_landmarks(btn=btn)
         self.assertTrue(isinstance(landmarks, list), 'Landmarks result should be a list')
         self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
+
+    def test_landmarks_empty_galaxy(self) -> None:
+        delta = DeltaDictionary()
+
+        args = self._make_args()
+
+        galaxy = DeltaGalaxy(args.btn, 2)
+        galaxy.read_sectors(delta, args.pop_code, args.ru_calc,
+                            args.route_reuse, args.routes, args.route_btn, args.mp_threads, args.debug_flag)
+        galaxy.output_path = args.output
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        self.assertEqual(0, len(galaxy.trade.components), "Unexpected number of components at J-2")
+        btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True) if s.component == n.component]
+        btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
+
+        expected_landmarks = []
+        landmarks, _ = galaxy.trade.get_landmarks(btn=btn)
+        self.assertTrue(isinstance(landmarks, list), 'Landmarks result should be a list')
+        self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')

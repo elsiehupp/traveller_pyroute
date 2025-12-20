@@ -42,7 +42,7 @@ class RouteCalculation(object):
         self.epsilon = 0.2
 
         # component level tracking
-        self.components = dict()
+        self.components: dict[int, int] = dict()
         self.component_landmarks = defaultdict(set)
 
         self.shortest_path_tree = None
