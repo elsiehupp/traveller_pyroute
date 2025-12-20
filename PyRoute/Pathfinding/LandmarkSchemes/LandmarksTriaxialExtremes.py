@@ -28,7 +28,7 @@ class LandmarksTriaxialExtremes:
         self._set_max_slots()
         self.graph_len = len(self.galaxy.stars)
         self.distgraph = self.galaxy.trade.star_graph
-        self.floatinf = float('+inf')
+        self.floatinf = float('+inf')  # pragma: no mutate
 
     def _set_max_slots(self):
         if 500 < self.route_reuse:
@@ -161,6 +161,7 @@ class LandmarksTriaxialExtremes:
                 sp_distances[inf_set] = 0
                 lobound[inf_set] = 0
                 weights = LandmarkAvoidHelper.calc_weights(sp_distances, lobound)
+                assert (weights[inf_set] == 0).all(), "Inf-set weights must be zero"
                 sizes = LandmarkAvoidHelper.calc_sizes(weights, sp_parents, component_landmarks[component_id])
                 nu_landmark = LandmarkAvoidHelper.traverse_sizes(sizes, first_star.index, sp_parents)
                 result[slotcount][component_id] = nu_landmark
