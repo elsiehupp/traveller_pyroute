@@ -135,7 +135,9 @@ class LandmarksTriaxialExtremes:
                     result[6][component_id] = source
                     component_landmarks[component_id].add(source)
 
-            if 7 == slots:
+                if 7 == slots:
+                    continue
+            elif 6 == slots:
                 continue
 
             slotcount = 7 if btn is not None else 6

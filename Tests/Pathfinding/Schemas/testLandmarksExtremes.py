@@ -197,6 +197,41 @@ class testLandmarksExtremes(baseTest):
         self.assertEqual(expected_components, actual)
         self.assertEqual(expected_landmarks, landmarks)
 
+    def test_landmarks_of_dagudashaag_and_zarushagar(self) -> None:
+        source1 = self.unpack_filename('../DeltaFiles/Dagudashaag.sec')
+        source2 = self.unpack_filename('../DeltaFiles/Zarushagar.sec')
+
+        delta = DeltaDictionary()
+        sector = SectorDictionary.load_traveller_map_file(source1)
+        self.assertIsNotNone(sector, "Sector file not loaded from " + source1)
+        delta[sector.name] = sector
+        sector = SectorDictionary.load_traveller_map_file(source2)
+        self.assertIsNotNone(sector, "Sector file not loaded from " + source1)
+        delta[sector.name] = sector
+
+        args = self._make_args()
+        args.max_jump = 3
+
+        galaxy = DeltaGalaxy(args.btn, args.max_jump)
+        galaxy.read_sectors(delta, args.pop_code, args.ru_calc,
+                            args.route_reuse, args.routes, args.route_btn, args.mp_threads, args.debug_flag)
+        galaxy.output_path = args.output
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        expected_components = defaultdict(set)
+        expected_components[0] = {129, 6, 967, 138, 555, 1045, 989}
+        expected_components[5] = {970}
+        expected_components[6] = {977, 979}
+        expected_landmarks = [{0: 555, 5: 970, 6: 979}, {0: 1045, 6: 977}, {0: 129}, {0: 138}, {0: 6}, {0: 967},
+                              {0: 989}]
+
+        foo = LandmarksTriaxialExtremes(galaxy)
+        landmarks, actual = foo.get_landmarks()
+        self.assertEqual(expected_components, actual)
+        self.assertEqual(expected_landmarks, landmarks)
+
     def test_max_slots(self) -> None:
         cases = [
             (501, 10),
