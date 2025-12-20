@@ -58,7 +58,6 @@ class LandmarksTriaxialExtremes:
             slots = min(self.max_slots, self._size_to_landmarks(comp_size))
 
             stars = [item for item in self.galaxy.star_mapping.values() if component_id == item.component]
-            max_q = (max(stars, key=lambda item: item.hex.q)).hex.q
             max_r = (max(stars, key=lambda item: item.hex.r)).hex.r
             min_q = (min(stars, key=lambda item: item.hex.q)).hex.q
             min_r = (min(stars, key=lambda item: item.hex.r)).hex.r
@@ -91,32 +90,6 @@ class LandmarksTriaxialExtremes:
             if 3 == slots:
                 continue
 
-            # minimum q in component
-            source = min(stars, key=lambda item: item.hex.q if item.index not in component_landmarks[component_id] else max_q)
-            result[3][component_id] = source.index
-            component_landmarks[component_id].add(source.index)
-
-            if 4 == slots:
-                continue
-
-            # maximum r in component
-            source = max(stars, key=lambda item: item.hex.r if item.index not in component_landmarks[component_id] else min_r)
-            result[4][component_id] = source.index
-            component_landmarks[component_id].add(source.index)
-
-            if 5 == slots:
-                continue
-
-            # maximum s in component
-            source = max(stars, key=lambda item: -item.hex.q - item.hex.r if item.index not in component_landmarks[component_id] else -(max_q + max_r))
-            result[5][component_id] = source.index
-            component_landmarks[component_id].add(source.index)
-
-            assert 6 == len(component_landmarks[component_id]),\
-                f"Duplicate landmarks detected on component {component_id} late segment"
-            if 6 == slots:
-                continue  # pragma: no mutate
-
             if btn is not None:
                 btn_split = [(s, n, d) for (s, n, d) in btn if s.component == component_id]
                 counters = defaultdict(int)
@@ -131,13 +104,13 @@ class LandmarksTriaxialExtremes:
                     max_counter = max(counters.values())
                     max_candidates = {k: v for (k, v) in counters.items() if v == max_counter}
                     source_index = list(max_candidates.keys())[0]
-                    result[6][component_id] = source_index
+                    result[3][component_id] = source_index
                     component_landmarks[component_id].add(source_index)
 
-                if 7 == slots:
+                if 4 == slots:
                     continue
 
-            slotcount = 7 if btn is not None else 6
+            slotcount = 4 if btn is not None else 3
             seeds = [{component_id: item[component_id]} for item in result if component_id in item]
             assert slotcount == len(seeds), f"S-t transpose-trigger landmark skipped in component {component_id}"
             approx = ApproximateShortestPathForestUnified(source.index, self.galaxy.stars, epsilon=self.galaxy.trade.epsilon, sources=seeds)

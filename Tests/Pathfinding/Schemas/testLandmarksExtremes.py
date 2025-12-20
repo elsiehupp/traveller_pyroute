@@ -124,7 +124,7 @@ class testLandmarksExtremes(baseTest):
         self.assertEqual(float('+inf'), foo.floatinf)
 
         expected = [
-            {0: 132}, {0: 257}, {0: 126}, {0: 0}, {0: 5}, {0: 144}, {0: 136}
+            {0: 132}, {0: 257}, {0: 126}, {0: 136}, {0: 142}, {0: 0}, {0: 242}
         ]
         actual, _ = foo.get_landmarks()
         self.assertEqual(expected, actual)
@@ -132,7 +132,7 @@ class testLandmarksExtremes(baseTest):
         actual, _ = foo.get_landmarks()
         self.assertEqual(7, len(actual))
         chunk = actual[3]
-        self.assertEqual(0, chunk[0])
+        self.assertEqual(136, chunk[0])
 
     def test_component_landmarks_of_zarushagar(self) -> None:
         sourcefile = self.unpack_filename('../DeltaFiles/Zarushagar.sec')
@@ -153,7 +153,7 @@ class testLandmarksExtremes(baseTest):
         galaxy.trade.calculate_components()
 
         expected = defaultdict(set)
-        expected[0] = {0, 257, 132, 5, 136, 144, 126}
+        expected[0] = {0, 126, 132, 136, 142, 242, 257}
 
         foo = LandmarksTriaxialExtremes(galaxy)
         _, actual = foo.get_landmarks()
@@ -181,10 +181,10 @@ class testLandmarksExtremes(baseTest):
         btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
 
         expected_components = defaultdict(set)
-        expected_components[0] = {256, 129, 35, 134, 6, 138, 150}
+        expected_components[0] = {256, 129, 35, 134, 85, 248, 184}
         expected_components[2] = {258, 259}
 
-        expected_landmarks = [{0: 134, 2: 259}, {0: 256, 2: 258}, {0: 129}, {0: 138}, {0: 6}, {0: 150}, {0: 35}]
+        expected_landmarks = [{0: 134, 2: 259}, {0: 256, 2: 258}, {0: 129}, {0: 35}, {0: 85}, {0: 248}, {0: 184}]
 
         foo = LandmarksTriaxialExtremes(galaxy)
         landmarks, actual = foo.get_landmarks(btn=btn)
@@ -218,8 +218,8 @@ class testLandmarksExtremes(baseTest):
         btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
 
         expected_components = defaultdict(set)
-        expected_components[0] = {129, 165, 6, 520, 138, 555, 620, 563}
-        expected_landmarks = [{0: 555}, {0: 620}, {0: 129}, {0: 138}, {0: 6}, {0: 563}, {0: 165}, {0: 520}]
+        expected_components[0] = {129, 165, 266, 520, 555, 558, 562, 620}
+        expected_landmarks = [{0: 555}, {0: 620}, {0: 129}, {0: 165}, {0: 266}, {0: 520}, {0: 562}, {0: 558}]
 
         foo = LandmarksTriaxialExtremes(galaxy)
         landmarks, actual = foo.get_landmarks(btn)
@@ -269,7 +269,7 @@ class testLandmarksExtremes(baseTest):
 
         self.assertEqual(1, len(galaxy.trade.components), "Unexpected number of components at J-4")
 
-        expected_landmarks = [{0: 34}, {0: 30}, {0: 27}, {0: 0}]
+        expected_landmarks = [{0: 34}, {0: 30}, {0: 27}, {0: 35}]
         landmarks, _ = galaxy.trade.get_landmarks()
         self.assertTrue(isinstance(landmarks, list), 'Landmarks result should be a list')
         self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
@@ -345,7 +345,7 @@ class testLandmarksExtremes(baseTest):
 
         self.assertEqual(2, len(galaxy.trade.components), "Unexpected number of components at J-4")
 
-        expected_landmarks = [{0: 34, 1: 41}, {0: 30, 1: 38}, {0: 61}, {0: 0}, {0: 43}]
+        expected_landmarks = [{0: 34, 1: 41}, {0: 30, 1: 38}, {0: 61}, {0: 39}, {0: 64}]
         landmarks, _ = galaxy.trade.get_landmarks()
         self.assertTrue(isinstance(landmarks, list), 'Landmarks result should be a list')
         self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')
@@ -375,7 +375,7 @@ class testLandmarksExtremes(baseTest):
         btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True) if s.component == n.component]
         btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
 
-        expected_landmarks = [{0: 4, 1: 13, 2: 10}, {0: 1, 1: 14, 2: 28}, {1: 8, 2: 11}, {2: 15}]
+        expected_landmarks = [{0: 4, 1: 13, 2: 10}, {0: 1, 1: 14, 2: 28}, {1: 8, 2: 11}, {2: 5}]
         landmarks, _ = galaxy.trade.get_landmarks(btn=btn)
         self.assertTrue(isinstance(landmarks, list), 'Landmarks result should be a list')
         self.assertEqual(expected_landmarks, landmarks, 'Unexpected landmark result')

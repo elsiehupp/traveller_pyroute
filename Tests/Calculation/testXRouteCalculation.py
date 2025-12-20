@@ -378,9 +378,9 @@ class testXRouteCalculation(baseTest):
             'INFO:PyRoute.TradeCalculation:XRoute pass 2',
             'INFO:PyRoute.TradeCalculation:[Liasdi (Zarushagar 0928), Unchin (Zarushagar 0522)]',
             'INFO:PyRoute.TradeCalculation:XRoute pass 3',
-            'INFO:PyRoute.TradeCalculation:Important worlds: 10, jump stations: 99',
+            'INFO:PyRoute.TradeCalculation:Important worlds: 10, jump stations: 96',
             'INFO:PyRoute.TradeCalculation:No route for important world: Aashrikan (Zarushagar 1740)',
-            'INFO:PyRoute.TradeCalculation:Important worlds: 1, jump stations: 108'
+            'INFO:PyRoute.TradeCalculation:Important worlds: 1, jump stations: 105'
         ]
         calc.generate_routes()
         with self.assertLogs(logger, 'INFO') as logs:

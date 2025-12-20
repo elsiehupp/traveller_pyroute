@@ -478,11 +478,11 @@ class testStatCalculation(baseTest):
         self.assertEqual(100376, galstat.economy)
         self.assertEqual(37, galstat.number)
         self.assertEqual(38046, galstat.sum_ru)
-        self.assertEqual(221650000000, galstat.tradeVol)
+        self.assertEqual(221850000000, galstat.tradeVol)
         self.assertEqual(3178.4, galstat.col_be)
         self.assertAlmostEqual(1135.98, galstat.im_be, 3)
-        self.assertEqual(14776500, galstat.passengers)
-        self.assertEqual(44300, galstat.spa_people)
+        self.assertEqual(14778000, galstat.passengers)
+        self.assertEqual(44315, galstat.spa_people)
         self.assertEqual(exp_port_size, galstat.port_size)
         self.assertEqual(exp_code_count, galstat.code_counts)
         self.assertEqual(35, galstat.gg_count)
@@ -499,8 +499,8 @@ class testStatCalculation(baseTest):
         self.assertEqual([high_pop_star], galaxy.sectors['Zarushagar'].stats.high_pop_worlds)
         self.assertEqual(galstat.__dict__, galaxy.sectors['Zarushagar'].subsectors['A'].stats.__dict__)
         self.assertEqual([high_pop_star], galaxy.sectors['Zarushagar'].subsectors['A'].stats.high_pop_worlds)
-        expected_starport_budgets = {0: 34.0, 1: 0, 2: 92.0, 3: 102.0, 4: 14.0, 5: 118.0, 6: 20.0, 7: 6.0, 8: 208.0,
-                                     9: 279.0, 10: 0, 11: 219.0, 12: 0, 13: 1.0, 14: 4.0, 15: 53.0, 16: 0, 17: 1409.0,
+        expected_starport_budgets = {0: 35.0, 1: 0, 2: 92.0, 3: 102.0, 4: 14.0, 5: 118.0, 6: 20.0, 7: 6.0, 8: 209.0,
+                                     9: 280.0, 10: 0, 11: 219.0, 12: 0, 13: 1.0, 14: 4.0, 15: 53.0, 16: 0, 17: 1409.0,
                                      18: 1435.0, 19: 0, 20: 25.0, 21: 0, 22: 93.0, 23: 20.0, 24: 781.0, 25: 0,
                                      26: 1854.0, 27: 8.0, 28: 0, 29: 0, 30: 0, 31: 1.0, 32: 13.0, 33: 7.0, 34: 1298.0,
                                      35: 766.0, 36: 0}
