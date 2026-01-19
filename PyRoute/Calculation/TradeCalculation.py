@@ -243,18 +243,17 @@ class TradeCalculation(RouteCalculation):
         self.logger.info("Finding pathfinding landmarks")
         self.star_graph = DistanceGraph(self.galaxy.stars)
         self.logger.info("Generating pathfinding landmarks")
-        landmarks, self.component_landmarks = self.get_landmarks(index=True, btn=btn)
+        landmarks, self.component_landmarks = self.get_landmarks(btn=btn)
         self.logger.info("Pathfinding landmarks found")
 
         source = max(self.galaxy.star_mapping.values(), key=lambda item: item.wtn)
-        source.is_landmark = True
         # Feed the landmarks in as roots of their respective shortest-path trees.
         # This sets up the approximate-shortest-path bounds to be during the first pathfinding call.
         self.shortest_path_tree = ApproximateShortestPathForestUnified(source.index, self.galaxy.stars,
                                                                              self.epsilon, sources=landmarks)
         self.star_len_root = max(1, math.floor(math.sqrt(len(self.star_graph))) // 2)
 
-        base_btn = 0
+        base_btn = 0  # pragma: no mutate
         counter = 0
         processed = 0
         total = len(btn)
@@ -264,8 +263,8 @@ class TradeCalculation(RouteCalculation):
                     self.logger.info('processed {} routes at BTN {}'.format(counter, base_btn))
                 base_btn = data['btn']
                 counter = 0
-            if total > 100 and processed % (total // 20) == 0:
-                self.logger.info('processed {} routes, at {}%'.format(processed, processed // (total // 100)))
+            if total > 100 and processed % (total // 20) == 0:  # pragma: no mutate
+                self.logger.info('processed {} routes, at {}%'.format(processed, processed // (total // 100)))  # pragma: no mutate
             self.get_trade_between(star, neighbor)
             counter += 1
             processed += 1
@@ -280,10 +279,10 @@ class TradeCalculation(RouteCalculation):
             keep = self.pathfinding_data['nodes_expanded'] != -1
             branchdata = self.pathfinding_data['branch_factor']
             branchdata = branchdata[1 <= branchdata]
-            branchdata = branchdata[branchdata < float('+inf')]
-            branch = np.percentile(branchdata, [50, 80, 98])
+            branchdata = branchdata[branchdata < float('+inf')]  # pragma: no mutate
+            branch = np.percentile(branchdata, [50, 80, 98])  # pragma: no mutate
             branch_geomean = round(10 ** np.mean(np.log10(branchdata)), 3)
-            neighbourhood_size = np.round(np.percentile(self.pathfinding_data['neighbourhood_size'], [50, 80, 98]), 3)
+            neighbourhood_size = np.round(np.percentile(self.pathfinding_data['neighbourhood_size'], [50, 80, 98]), 3)  # pragma: no mutate
             total_expanded = int(np.sum(self.pathfinding_data['nodes_expanded'][keep]))
             total_queued = int(np.sum(self.pathfinding_data['nodes_queued'][keep]))
             total_revisited = int(np.sum(self.pathfinding_data['nodes_revisited'][keep]))

@@ -29,21 +29,21 @@ class testApproximateShortestPathForest(baseTest):
     def setUp(self) -> None:
         ParseStarInput.deep_space = {}
 
-    def test_trixial_bounds_in_bulk_unified(self) -> None:
+    def test_triaxial_bounds_in_bulk_unified(self) -> None:
         galaxy = self.set_up_zarushagar_sector()
 
         foo = LandmarksTriaxialExtremes(galaxy)
-        landmarks, _ = foo.get_landmarks(index=True)
+        landmarks, _ = foo.get_landmarks()
         graph = galaxy.stars
         stars = list(graph.nodes)
         source = stars[0]
 
         approx = ApproximateShortestPathForestUnified(source, graph, 0.2, sources=landmarks)
-        self.assertEqual(6, approx.num_trees)
+        self.assertEqual(7, approx.num_trees)
 
         active_nodes = [2, 80]
         target = 80
-        expected = np.array([326.0, 0])
+        expected = np.array([420.0, 0.0])
         actual = approx.lower_bound_bulk(target)
         self.assertIsNotNone(actual)
         actual = actual[active_nodes]
@@ -54,19 +54,19 @@ class testApproximateShortestPathForest(baseTest):
         galaxy = self.set_up_zarushagar_sector()
 
         foo = LandmarksTriaxialExtremes(galaxy)
-        landmarks, _ = foo.get_landmarks(index=True)
+        landmarks, _ = foo.get_landmarks()
         graph = galaxy.stars
         stars = list(graph.nodes)
         source = stars[0]
 
         approx = ApproximateShortestPathForestUnified(source, graph, 0.2, sources=landmarks)
-        self.assertEqual(6, approx.num_trees)
+        self.assertEqual(7, approx.num_trees)
 
     def test_unified_can_handle_bulk_lobound_from_singleton_component(self) -> None:
         galaxy = self.set_up_zarushagar_sector()
 
         foo = LandmarksTriaxialExtremes(galaxy)
-        landmarks, _ = foo.get_landmarks(index=True)
+        landmarks, _ = foo.get_landmarks()
         graph = galaxy.stars
         source = [item for item in graph if graph.nodes()[item]['star'].component == 0][0]
         targ = [item for item in graph if graph.nodes()[item]['star'].component == 1][0]
@@ -81,7 +81,7 @@ class testApproximateShortestPathForest(baseTest):
         galaxy = self.set_up_zarushagar_sector()
 
         foo = LandmarksTriaxialExtremes(galaxy)
-        landmarks, _ = foo.get_landmarks(index=True)
+        landmarks, _ = foo.get_landmarks()
         graph = galaxy.stars
         stars = list(graph.nodes)
         source = stars[0]

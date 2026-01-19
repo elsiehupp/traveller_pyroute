@@ -42,7 +42,7 @@ class RouteCalculation(object):
         self.epsilon = 0.2
 
         # component level tracking
-        self.components = dict()
+        self.components: dict[int, int] = dict()
         self.component_landmarks = defaultdict(set)
 
         self.shortest_path_tree = None
@@ -240,9 +240,9 @@ class RouteCalculation(object):
                 self.galaxy.star_mapping[star].component = counter
         return
 
-    def get_landmarks(self, index=False, btn=None) -> tuple[list[dict], defaultdict[Any, set]]:
+    def get_landmarks(self, btn=None) -> tuple[list[dict], defaultdict[Any, set]]:
         schema = LandmarksTriaxialExtremes(self.galaxy)
-        return schema.get_landmarks(index, btn=btn)
+        return schema.get_landmarks(btn=btn)
 
     def unilateral_filter(self, star) -> bool:
         """

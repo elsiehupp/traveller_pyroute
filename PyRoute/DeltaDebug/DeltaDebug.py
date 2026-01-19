@@ -152,7 +152,7 @@ def process() -> None:
 
     delta_dict = DeltaDictionary()
     for sector_file in sectors_list:
-        sector: Optional[Sector] = SectorDictionary.load_traveller_map_file(sector_file)
+        sector: Optional[SectorDictionary] = SectorDictionary.load_traveller_map_file(sector_file)
         if sector is None:
             continue
         delta_dict[sector.name] = sector
