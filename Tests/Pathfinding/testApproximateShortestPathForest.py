@@ -50,6 +50,30 @@ class testApproximateShortestPathForest(baseTest):
 
         np.testing.assert_array_almost_equal(expected, actual, 0.000001, "Unexpected bounds array")
 
+    def test_triaxial_bounds_in_bulk_unified_with_distances(self) -> None:
+        galaxy = self.set_up_zarushagar_sector()
+
+        foo = LandmarksTriaxialExtremes(galaxy)
+        landmarks, _ = foo.get_landmarks()
+        graph = galaxy.stars
+        stars = list(graph.nodes)
+        source = stars[0]
+
+        approx = ApproximateShortestPathForestUnified(source, graph, 0.2, sources=landmarks, use_distances=True)
+        self.assertEqual(7, approx.num_trees)
+
+        active_nodes = [2, 80]
+        target = 80
+        expected = np.array([15.0, 0.0])
+        expected_distance = 18
+        actual = approx.lower_bound_bulk(target)
+        self.assertIsNotNone(actual)
+        actual = actual[active_nodes]
+        distance = galaxy.stars.nodes[2]['star'].distance(galaxy.stars.nodes[80]['star'])
+
+        np.testing.assert_array_almost_equal(expected, actual, 0.000001, "Unexpected bounds array")
+        np.testing.assert_equal(expected_distance, distance, "Unexpected 2-80 distance")
+
     def test_unified_can_handle_singleton_landmarks(self) -> None:
         galaxy = self.set_up_zarushagar_sector()
 

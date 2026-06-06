@@ -34,9 +34,9 @@ class ApproximateShortestPathForestUnified:
     _distances: cython.declare(cnp.ndarray(cython.float, ndim=2), 'readonly')
     _max_labels: cnp.ndarray(cython.float, ndim=2)
 
-    def __init__(self, source, graph, epsilon, sources=None):
+    def __init__(self, source, graph, epsilon, sources=None, use_distances: bool = False):
         seeds, source, num_trees = self._get_sources(graph, source, sources)
-        self._graph = DistanceGraph(graph)
+        self._graph = DistanceGraph(graph, use_distances)
         self._source = source
         self._epsilon = epsilon
         # memoising this because its value gets used _heavily_ in lower bound calcs, called during heuristic generation
