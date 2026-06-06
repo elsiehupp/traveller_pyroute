@@ -48,6 +48,25 @@ class testDistanceGraph(baseTest):
         extended = distgraph.min_cost(0, indirect=True)
         self.assertEqual(expected_extended, list(extended), 'Unexpected indirect min-cost vector after update')
 
+    def test_min_cost_in_single_component_with_distances(self) -> None:
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        galaxy, graph, _, _ = self._setup_graph(sourcefile)
+        components = galaxy.trade.components
+        self.assertEqual(1, len(components))
+
+        distgraph = DistanceGraph(graph, use_distances=True)
+        expected = [0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0]
+        actual = distgraph.min_cost(0)
+        self.assertEqual(expected, list(actual), 'Unexpected min-cost vector')
+
+        expected_extended = [0.0, 3.0, 2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0,
+                             2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0,
+                             3.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0]
+        extended = distgraph.min_cost(0, indirect=True)
+        self.assertEqual(expected_extended, list(extended), 'Unexpected indirect min-cost vector')
+
     def test_min_cost_in_multiple_components(self) -> None:
         sourcefile = self.unpack_filename('DeltaFiles/Zarushagar.sec')
         galaxy, graph, _, _ = self._setup_graph(sourcefile)
