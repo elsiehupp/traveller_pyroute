@@ -20,12 +20,14 @@ class DistanceGraph(DistanceBase):
     def __init__(self, graph: Graph, use_distances: bool = False):
         super().__init__(graph)
         inline = 'distance' if use_distances else 'weight'
+        outline = 'weight' if use_distances else 'distance'
 
         self._arcs = [
             (
                 np.array(graph.adj[u], dtype=int),
                 np.array([data[inline] for data in list(graph.adj[u].values())], dtype=float),
-                {v: k for (k, v) in enumerate(list(graph.adj[u].keys()))}
+                {v: k for (k, v) in enumerate(list(graph.adj[u].keys()))},
+                np.array([data[outline] for data in list(graph.adj[u].values())], dtype=float)
             )
             for u in self._nodes
         ]

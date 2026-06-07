@@ -98,6 +98,7 @@ class TradeCalculation(RouteCalculation):
         self.penumbra_routes = 0
 
         self.shortest_path_tree = None
+        self.shortest_dist_tree = None
         # Track inter-sector passenger imbalances
         self.sector_passenger_balance = TradeBalance(stat_field="passengers", region=galaxy)
         # Track inter-sector trade imbalances
@@ -278,6 +279,9 @@ class TradeCalculation(RouteCalculation):
         # This sets up the approximate-shortest-path bounds to be during the first pathfinding call.
         self.shortest_path_tree = ApproximateShortestPathForestUnified(source.index, self.galaxy.stars,
                                                                              self.epsilon, sources=landmarks)
+        self.shortest_dist_tree = ApproximateShortestPathForestUnified(source.index, self.galaxy.stars,
+                                                                             0, sources=landmarks,
+                                                                             use_distances=True)
         self.star_len_root = max(1, math.floor(math.sqrt(len(self.star_graph))) // 2)
 
         base_btn = 0  # pragma: no mutate
@@ -340,6 +344,12 @@ class TradeCalculation(RouteCalculation):
         """
         assert 'actual distance' not in self.galaxy.ranges._adj[target][star],\
             "This route from " + str(star) + " to " + str(target) + " has already been processed in reverse"
+
+        dist_bound = self.shortest_dist_tree.lower_bound(star.index, target.index)
+        dist_btn = self.get_btn(star, target, dist_bound)
+        if self.min_btn > dist_btn:
+            # self.penumbra_routes += 1
+            return
 
         try:
             # Get upper bound value, and increase by 0.5% to ensure it _is_ an upper bound

@@ -49,6 +49,8 @@ class testApproximateShortestPathTreeRegressions(baseTest):
         stars[0].is_landmark = True
 
         galaxy.trade.shortest_path_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0)
+        galaxy.trade.shortest_dist_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0,
+                                                                               use_distances=True)
         for (star, neighbour, _) in btn:
             galaxy.trade.get_trade_between(star, neighbour)
 
@@ -80,6 +82,8 @@ class testApproximateShortestPathTreeRegressions(baseTest):
         stars[0].is_landmark = True
 
         galaxy.trade.shortest_path_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0)
+        galaxy.trade.shortest_dist_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0,
+                                                                               use_distances=True)
         for (star, neighbour, _) in btn:
             galaxy.trade.get_trade_between(star, neighbour)
 
@@ -111,6 +115,8 @@ class testApproximateShortestPathTreeRegressions(baseTest):
         stars[0].is_landmark = True
 
         galaxy.trade.shortest_path_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0)
+        galaxy.trade.shortest_dist_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0,
+                                                                               use_distances=True)
         for (star, neighbour, _) in btn:
             galaxy.trade.get_trade_between(star, neighbour)
 
@@ -141,6 +147,8 @@ class testApproximateShortestPathTreeRegressions(baseTest):
         stars.sort(key=lambda item: item.wtn, reverse=True)
 
         galaxy.trade.shortest_path_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0)
+        galaxy.trade.shortest_dist_tree = ApproximateShortestPathForestUnified(stars[0].index, galaxy.stars, 0,
+                                                                               use_distances=True)
         for (star, neighbour, _) in btn:
             galaxy.trade.get_trade_between(star, neighbour)
 

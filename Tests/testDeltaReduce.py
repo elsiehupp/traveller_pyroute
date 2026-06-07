@@ -293,6 +293,8 @@ class testDeltaReduce(baseTest):
         btn = [(s, n, d) for (s, n, d) in galaxy.ranges.edges(data=True) if s.component == n.component]
         btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
         galaxy.trade.shortest_path_tree = ApproximateShortestPathForestUnified(stars[0], galaxy.stars, 0.2)
+        galaxy.trade.shortest_dist_tree = ApproximateShortestPathForestUnified(stars[0], galaxy.stars, 0,
+                                                                               use_distances=True)
 
         switch = 7
         line = btn[switch]
