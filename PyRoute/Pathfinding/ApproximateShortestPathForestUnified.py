@@ -62,7 +62,7 @@ class ApproximateShortestPathForestUnified:
 
     def lower_bound(self, source, target) -> float:
         raw = np.abs(self._distances[source, :] - self._distances[target, :])
-        raw = raw[~np.isinf(raw)]
+        raw = raw[np.isfinite(raw)]
         if 0 == len(raw):
             return 0
         return np.max(raw)

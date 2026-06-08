@@ -284,6 +284,10 @@ class TradeCalculation(RouteCalculation):
                                                                              use_distances=True)
         self.star_len_root = max(1, math.floor(math.sqrt(len(self.star_graph))) // 2)
 
+        np.seterr(invalid="ignore")
+        btn = [(s, n, d) for (s, n, d) in btn if (lobound := self.shortest_dist_tree.lower_bound(s.index, n.index) > 0)
+               and (self.get_btn(s, n, lobound) >= self.min_btn)]
+
         base_btn = 0  # pragma: no mutate
         counter = 0
         processed = 0
@@ -344,12 +348,6 @@ class TradeCalculation(RouteCalculation):
         """
         assert 'actual distance' not in self.galaxy.ranges._adj[target][star],\
             "This route from " + str(star) + " to " + str(target) + " has already been processed in reverse"
-
-        dist_bound = self.shortest_dist_tree.lower_bound(star.index, target.index)
-        dist_btn = self.get_btn(star, target, dist_bound)
-        if self.min_btn > dist_btn:
-            # self.penumbra_routes += 1
-            return
 
         try:
             # Get upper bound value, and increase by 0.5% to ensure it _is_ an upper bound
