@@ -9,7 +9,7 @@ from typing import Any
 import numpy as np
 from PyRoute.Star import Star
 from PyRoute.Pathfinding.DistanceGraph import DistanceGraph
-from PyRoute.Pathfinding.single_source_dijkstra import implicit_shortest_path_dijkstra_distance_graph, explicit_shortest_path_dijkstra_distance_graph
+from PyRoute.Pathfinding.single_source_dijkstra import implicit_shortest_path_dijkstra_distance_graph
 
 float64max = np.finfo(np.float64).max
 
@@ -27,24 +27,20 @@ class ApproximateShortestPathForestUnified:
         self._seeds = seeds
         self._num_trees = num_trees
         self._graph_len = len(self._graph)
-        self._distances = np.ones((self._graph_len, self._num_trees), dtype=float, order='F') * float('+inf')
-        self._max_labels = np.ones((self._graph_len, self._num_trees), dtype=float) * float('+inf')
+        self._distances = np.ones((self._graph_len, self._num_trees), order='F') * float('+inf')    # pragma: no mutate
+        self._max_labels = np.ones((self._graph_len, self._num_trees)) * float('+inf')  # pragma: no mutate
 
-        min_cost = self._graph.min_cost(list(range(self._graph_len)), 0)
+        min_cost = self._graph.min_cost(self._source, True)  # pragma: no mutate
         # spin up initial distances
         for i in range(self._num_trees):
             raw_seeds = self._seeds[i] if isinstance(self._seeds[i], list) else list(self._seeds[i].values())
             self._distances[raw_seeds, i] = 0
-            result = implicit_shortest_path_dijkstra_distance_graph(self._graph, self._source,
-                                                                                   self._distances[:, i],
-                                                                                   seeds=raw_seeds,
-                                                                                   min_cost=min_cost,
-                                                                                   divisor=self._divisor)
-            self._distances[:, i], self._max_labels[:, i], _ = result
+            self._distances[:, i], self._max_labels[:, i], _ = self._dijkstra(self._distances[:, i], None, min_cost, raw_seeds)
 
     def lower_bound(self, source, target) -> float:
         raw = np.abs(self._distances[source, :] - self._distances[target, :])
         raw = raw[~np.isinf(raw)]
+        raw = raw[~np.isnan(raw)]
         if 0 == len(raw):
             return 0
         return np.max(raw)
@@ -57,7 +53,7 @@ class ApproximateShortestPathForestUnified:
         else:
             # if we haven't got _any_ active lines, throw hands up and spit back zeros
             if not anypath:
-                return np.zeros(self._graph_len, dtype=float)
+                return np.zeros(self._graph_len)
             actives = self._distances[:, overdrive]
             target = self._distances[target_node, overdrive]
 
@@ -67,7 +63,7 @@ class ApproximateShortestPathForestUnified:
 
     def triangle_upbound(self, source: int, target: int) -> float:
         raw = self._distances[source, :] + self._distances[target, :]
-        raw = raw[raw != float('+inf')]
+        raw = raw[raw != float('+inf')]  # pragma: no mutate
 
         if 0 == len(raw):
             return float64max / 2
@@ -81,10 +77,9 @@ class ApproximateShortestPathForestUnified:
         return result, result.all(), result.any()
 
     def update_edges(self, edges: list[tuple[int, int]]) -> None:
-        dropnodes = set()
+        dropnodes = False  # pragma: no mutate
         dropspecific = []
-        tree_dex = np.array(list(range(self._num_trees)), dtype=int)
-        targdex: int = -1
+        tree_dex = np.array(list(range(self._num_trees)))
         i: int
         min_cost: np.ndarray[float]
         shelf: tuple[np.ndarray[int], np.ndarray[float]]
@@ -92,16 +87,20 @@ class ApproximateShortestPathForestUnified:
         for _ in range(self._num_trees):
             dropspecific.append(set())
         for item in edges:
+            targdex: int = None  # deliberately invalid target index to trip an IndexError as fall-back  # pragma: no mutate
             left = item[0]
             right = item[1]
-            leftdist = self._distances[left, :]
-            rightdist = self._distances[right, :]
-            rightdist[np.isinf(rightdist)] = 0
+            leftdist = self._distances[left, :].copy()
+            rightdist = self._distances[right, :].copy()
+            leftdist[np.isinf(leftdist)] = 0  # pragma: no mutate
+            rightdist[np.isinf(rightdist)] = 0  # pragma: no mutate
             shelf = self._graph._arcs[left]
-            for i in range(len(shelf)):
+            for i in range(len(shelf[0])):
                 if shelf[0][i] == right:
                     targdex = i
                     break
+            if not isinstance(targdex, int):
+                raise ValueError("Selected target index out of range")
             weight = shelf[1][targdex]
             delta = abs(leftdist - rightdist)
             # Given distance labels, L, on nodes u and v, assuming u's label being smaller,
@@ -116,20 +115,15 @@ class ApproximateShortestPathForestUnified:
 
             # If that bound no longer holds, it's due to the edge (u, v) having its weight decreased during pathfinding.
             # Tag each incident node as needing updates.
-            maxdelta = delta[0]
-            for i in range(1, len(delta)):
-                maxdelta = max(maxdelta, delta[i])
-
-            if maxdelta >= weight:
-                dropnodes.add(left)
-                dropnodes.add(right)
-                overdrive = tree_dex[delta >= weight]
+            if np.max(delta) >= weight:  # pragma: no mutate
+                dropnodes = True
+                overdrive = tree_dex[delta >= weight]  # pragma: no mutate
                 for i in overdrive:
                     dropspecific[i].add(left)
                     dropspecific[i].add(right)
 
         # if no nodes are to be dropped, nothing to do - bail out
-        if 0 == len(dropnodes):
+        if not dropnodes:
             return
 
         # Now we're updating at least one tree, grab the current min-cost vector to feed into implicit-dijkstra
@@ -139,37 +133,46 @@ class ApproximateShortestPathForestUnified:
         # dijkstra to update the approx-SP tree/forest.  Some nodes in dropnodes may well be SP descendants of others,
         # but it wasn't worth the time or complexity cost to filter them out here.
         for i in range(self._num_trees):
-            if 0 == len(dropspecific[i]):
+            if 0 == len(dropspecific[i]):  # pragma: no mutate
                 continue
-            self._distances[:, i], _, self._max_labels[:, i], _ = explicit_shortest_path_dijkstra_distance_graph(
-                                                                  self._graph, self._source,
-                                                                  distance_labels=self._distances[:, i],
-                                                                  seeds=dropspecific[i], divisor=self._divisor,
-                                                                  min_cost=min_cost, max_labels=self._max_labels[:, i])
+            self._distances[:, i], self._max_labels[:, i], _ = self._dijkstra(self._distances[:, i], self._max_labels[:, i], min_cost, dropspecific[i])
 
     def expand_forest(self, nu_seeds) -> None:
         raw_seeds = nu_seeds if isinstance(nu_seeds, list) else list(nu_seeds.values())
-        nu_distances = np.ones((self._graph_len)) * float('+inf')
+        nu_distances = np.ones((self._graph_len)) * float('+inf')  # pragma: no mutate
         nu_distances[raw_seeds] = 0
-        nu_distances, nu_max_labels, _ = implicit_shortest_path_dijkstra_distance_graph(self._graph, self._source,
-                                                                nu_distances,
-                                                                seeds=raw_seeds,
-                                                                divisor=self._divisor)
-        result = np.zeros((self._graph_len, 1), dtype=float)
+        nu_distances, nu_max_labels, _ = self._dijkstra(nu_distances, None, None, raw_seeds)
+        result = np.zeros((self._graph_len, 1))
         result[:, 0] = list(nu_distances)
-        maxresult = np.zeros((self._graph_len, 1), dtype=float)
+        maxresult = np.zeros((self._graph_len, 1))
         maxresult[:, 0] = list(nu_max_labels)
         self._distances = np.append(self._distances, result, 1)
-        self._max_labels = np.append(self._distances, maxresult, 1)
+        self._max_labels = np.append(self._max_labels, maxresult, 1)
         self._num_trees += 1
 
+    def _dijkstra(self, distances, max_labels, min_cost, seeds):
+        assert isinstance(distances, np.ndarray)
+        assert isinstance(max_labels, (np.ndarray, type(None)))
+        assert isinstance(min_cost, (np.ndarray, type(None)))
+        assert isinstance(seeds, (list, set))
+        result = implicit_shortest_path_dijkstra_distance_graph(
+            self._graph, self._source,
+            distance_labels=distances,
+            seeds=seeds,
+            divisor=self._divisor,
+            # min_cost=min_cost,  # pragma: no mutate
+            max_labels=max_labels)  # pragma: no mutate
+        return result
+
     def _get_sources(self, graph, source, sources):
-        seeds = None
+        seeds = None  # pragma: no mutate
         num_trees = 1
         if isinstance(source, Star) and source.component is None:
             raise ValueError(
                 "Source node " + str(source) + " has undefined component.  Has calculate_components() been run?")
         if isinstance(source, int):
+            if source not in graph.nodes:
+                raise ValueError("Source node # " + str(source) + " not in source graph")
             if 'star' not in graph.nodes[source]:
                 raise ValueError("Source node # " + str(source) + " does not have star attribute")
             if graph.nodes[source]['star'].component is None:
@@ -179,10 +182,12 @@ class ApproximateShortestPathForestUnified:
             seeds = [[source]]
         if sources is not None:
             for src in sources:
-                if isinstance(src, Star) and sources[src].component is None:
+                if isinstance(src, Star) and src.component is None:
                     raise ValueError("Source node " + str(
-                        sources[src]) + " has undefined component.  Has calculate_components() been run?")
+                        src) + " has undefined component.  Has calculate_components() been run?")
                 if isinstance(src, int):
+                    if src not in graph.nodes:
+                        raise ValueError("Source node # " + str(src) + " not in source graph")
                     if 'star' not in graph.nodes[src]:
                         raise ValueError("Source node # " + str(src) + " does not have star attribute")
                     if graph.nodes[src]['star'].component is None:

@@ -1,0 +1,663 @@
+"""
+Created on Dec 21, 2025
+
+@author: CyberiaResurrection
+"""
+import logging
+from unittest.mock import patch
+
+from numpy import dtype
+import numpy as np
+
+from PyRoute import Star
+from PyRoute.AreaItems.Galaxy import Galaxy
+from PyRoute.AreaItems.Sector import Sector
+from PyRoute.DataClasses.ReadSectorOptions import ReadSectorOptions
+from PyRoute.Inputs.ParseStarInput import ParseStarInput
+from PyRoute.Pathfinding.ApproximateShortestPathForestUnifiedFallback import ApproximateShortestPathForestUnified
+from PyRoute.Pathfinding.DistanceGraph import DistanceGraph
+from Tests.baseTest import baseTest
+
+
+class testApproximateShortestPathForestUnifiedFallback(baseTest):
+
+    def setUp(self) -> None:
+        ParseStarInput.deep_space = {}
+        logger = logging.getLogger('PyRoute.Star')
+        logger.setLevel(50)
+        logger = logging.getLogger('PyRoute.Galaxy')
+        self.old_galaxy = 0
+        logger.setLevel(50)
+        logger = logging.getLogger('PyRoute.TradeCalculation')
+        logger.setLevel(50)
+
+    def tearDown(self) -> None:
+        logger = logging.getLogger('PyRoute.Galaxy')
+        logger.setLevel(self.old_galaxy)
+
+    def test_init_1(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        galaxy.trade.star_graph = DistanceGraph(galaxy.stars)
+
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources={0: 1})
+        self.assertEqual(0, shortest_path_tree._source)
+        self.assertEqual({0: 1}, shortest_path_tree._sources)
+        self.assertEqual([[1]], shortest_path_tree._seeds)
+        self.assertEqual(0.1, shortest_path_tree._epsilon)
+        self.assertEqual(1 / 1.1, shortest_path_tree._divisor)
+        self.assertEqual(1, shortest_path_tree._num_trees)
+        self.assertEqual(37, shortest_path_tree._graph_len)
+
+        self.assertEqual(dtype('float64'), shortest_path_tree._distances.dtype)
+        self.assertEqual(dtype('float64'), shortest_path_tree._max_labels.dtype)
+
+        distances = shortest_path_tree.distances.round(6)
+        distances = distances.tolist()
+        self.assertEqual([158.181824], distances[0])
+        self.assertEqual([0.0], distances[1])
+        self.assertEqual([41.818184], distances[2])
+        self.assertEqual([64.545456], distances[3])
+        self.assertEqual([83.636368], distances[4])
+        self.assertEqual([109.090912], distances[5])
+        self.assertEqual([43.636364], distances[6])
+        self.assertEqual([83.636368], distances[7])
+
+    def test_init_2(self) -> None:
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        exp_msg = 'Source node # -1 not in source graph'
+        msg = None
+
+        try:
+            ApproximateShortestPathForestUnified(-1, galaxy.stars, 0.1, sources=None)
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_3(self) -> None:
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        exp_msg = 'Source node Foostar (Core None) has undefined component.  Has calculate_components() been run?'
+        msg = None
+
+        sector = Sector('# Core', '# 0, 0')
+        source = Star()
+        source.sector = sector
+        source.name = "Foostar"
+
+        try:
+            ApproximateShortestPathForestUnified(source, galaxy.stars, 0.1, sources=None)
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_4(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+
+        exp_msg = 'Source node Didraga (Zarushagar 0101) has undefined component.  Has calculate_components() been run?'
+        msg = None
+        try:
+            ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources={0: 0})
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_5(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        del galaxy.stars.nodes[0]['star']
+
+        exp_msg = 'Source node # 0 does not have star attribute'
+        msg = None
+        try:
+            ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources={0: 0})
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_6(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        exp_msg = 'Source node # -1 not in source graph'
+        msg = None
+        try:
+            ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=[-1])
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_7(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        galaxy.trade.star_graph = DistanceGraph(galaxy.stars)
+
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1)
+        self.assertEqual(0, shortest_path_tree._source)
+        self.assertEqual(None, shortest_path_tree._sources)
+        self.assertEqual([[0]], shortest_path_tree._seeds)
+        self.assertEqual(0.1, shortest_path_tree._epsilon)
+        self.assertEqual(1 / 1.1, shortest_path_tree._divisor)
+        self.assertEqual(1, shortest_path_tree._num_trees)
+        self.assertEqual(37, shortest_path_tree._graph_len)
+
+        self.assertEqual(dtype('float64'), shortest_path_tree._distances.dtype)
+        self.assertEqual(dtype('float64'), shortest_path_tree._max_labels.dtype)
+
+        distances = shortest_path_tree.distances.round(6)
+        distances = distances.tolist()
+        self.assertEqual([0.0], distances[0])
+        self.assertEqual([158.181824], distances[1])
+        self.assertEqual([200.0], distances[2])
+        self.assertEqual([222.72728], distances[3])
+        self.assertEqual([241.818176], distances[4])
+        self.assertEqual([49.090912], distances[5])
+        self.assertEqual([114.545456], distances[6])
+        self.assertEqual([241.818176], distances[7])
+
+    def test_init_8(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        sector = Sector('# Core', '# 0, 0')
+        source = Star()
+        source.sector = sector
+        source.name = "Foostar"
+
+        exp_msg = 'Source node Foostar (Core None) has undefined component.  Has calculate_components() been run?'
+        msg = None
+        try:
+            ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=[source])
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_9(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        sector = Sector('# Core', '# 0, 0')
+        source = Star()
+        source.sector = sector
+        source.name = "Foostar"
+
+        del galaxy.stars.nodes[1]['star']
+
+        exp_msg = 'Source node # 1 does not have star attribute'
+        msg = None
+        try:
+            ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=[1])
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_10(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        sector = Sector('# Core', '# 0, 0')
+        source = Star()
+        source.sector = sector
+        source.name = "Foostar"
+
+        galaxy.stars.nodes[1]['star'].component = None
+
+        exp_msg = 'Source node Ymirial (Zarushagar 0106) has undefined component.  Has calculate_components() been run?'
+        msg = None
+        try:
+            ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=[1])
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_init_11(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+
+        dijkstra_patch = 'PyRoute.Pathfinding.ApproximateShortestPathForestUnifiedFallback.ApproximateShortestPathForestUnified._dijkstra'
+
+        retval = (None, None, None)
+        with patch(dijkstra_patch, return_value=retval) as mock_method:
+            ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1)
+            mock_method.assert_called_once()
+            calls = mock_method.call_args.args
+            self.assertIsNone(calls[1])
+            self.assertIsNotNone(calls[2])
+            self.assertIsInstance(calls[2], np.ndarray)
+            self.assertEqual([0], calls[3])
+
+    def test_lower_bound_bulk_1(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=1)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        lobound = shortest_path_tree.lower_bound_bulk(2)
+        self.assertEqual(418.1817855834961, lobound[0])
+        self.assertEqual(float('inf'), lobound[1])
+        self.assertEqual(0.0, lobound[2])
+        self.assertEqual(21.81818389892578, lobound[3])
+        self.assertEqual(45.45454788208008, lobound[4])
+        self.assertEqual(369.0908737182617, lobound[5])
+
+        lobound = shortest_path_tree.lower_bound_bulk(1)
+        self.assertEqual(dtype('float64'), lobound.dtype)
+        self.assertEqual(0.0, lobound[0])
+        self.assertEqual(0.0, lobound[1])
+        self.assertEqual(0.0, lobound[2])
+        self.assertEqual(0.0, lobound[3])
+        self.assertEqual(0.0, lobound[4])
+        self.assertEqual(0.0, lobound[5])
+
+    def test_triangle_upbound_1(self) -> None:
+        float64max = np.finfo(np.float64).max
+
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=1)
+        galaxy.read_sectors(readparms)
+
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        upbound = shortest_path_tree.triangle_upbound(0, 2)
+        self.assertEqual(508.99997825622563, upbound)
+        upbound = shortest_path_tree.triangle_upbound(1, 2)
+        self.assertEqual(float64max / 2, upbound)
+
+    def test_update_edges_1(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=2)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        galaxy.stars[0][5]['weight'] -= (galaxy.stars[0][5]['weight'] - galaxy.stars[0][5]['distance']) / 5
+
+        zero_dist = shortest_path_tree.distances[0, :]
+        five_dist = shortest_path_tree.distances[5, :]
+        self.assertEqual([214.54547119140625, 366.3636474609375, 251.8181915283203, 239.09091186523438], zero_dist.tolist())
+        self.assertEqual([169.09091186523438, 324.5454406738281, 210.00001525878906, 193.63636779785156], five_dist.tolist())
+
+        shortest_path_tree.lighten_edge(0, 5, galaxy.stars[0][5]['weight'])
+        edges = [(0, 5)]
+
+        shortest_path_tree.update_edges(edges)
+        self.assertEqual([208.5454559326172, 366.3636474609375, 251.8181915283203, 233.09091186523438], zero_dist.tolist())
+        self.assertEqual([169.09091186523438, 324.5454406738281, 210.00001525878906, 193.63636779785156],
+                         five_dist.tolist())
+
+    def test_update_edges_2(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=2)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        edges = [(0, 6)]
+
+        exp_msg = 'Selected target index out of range'
+        msg = None
+        try:
+            shortest_path_tree.update_edges(edges)
+        except ValueError as e:
+            msg = str(e)
+        self.assertEqual(exp_msg, msg)
+
+    def test_update_edges_3(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=1)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        galaxy.stars[2][3]['weight'] = 21.5
+
+        zero_dist = shortest_path_tree.distances[2, :]
+        five_dist = shortest_path_tree.distances[3, :]
+        self.assertEqual([70.90909576416016, 45.45454788208008, np.inf, np.inf], zero_dist.tolist())
+        self.assertEqual([49.090911865234375, 23.636363983154297, np.inf, np.inf], five_dist.tolist())
+        self.assertEqual(21.81818389892578, shortest_path_tree.lower_bound(2, 3))
+
+        shortest_path_tree.lighten_edge(2, 3, galaxy.stars[2][3]['weight'])
+        edges = [(2, 3)]
+
+        shortest_path_tree.update_edges(edges)
+        self.assertEqual([68.63636779785156, 43.181819915771484, np.inf, np.inf], zero_dist.tolist())
+        self.assertEqual([49.090911865234375, 23.636363983154297, np.inf, np.inf], five_dist.tolist())
+        self.assertEqual(19.545455932617188, shortest_path_tree.lower_bound(2, 3))
+
+    def test_update_edges_4(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/xroute_routes_pass_1_2/Core.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=3)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        galaxy.stars[0][1]['weight'] = 21.5
+
+        zero_dist = shortest_path_tree.distances[0, :]
+        five_dist = shortest_path_tree.distances[1, :]
+        self.assertEqual([0.0], zero_dist.tolist())
+        self.assertEqual([85.45455169677734], five_dist.tolist())
+        self.assertEqual(0, shortest_path_tree.lower_bound(2, 3))
+        self.assertEqual(85.45455169677734, shortest_path_tree.lower_bound(0, 1))
+
+        shortest_path_tree.lighten_edge(0, 1, galaxy.stars[0][1]['weight'])
+        edges = [(1, 0)]
+
+        shortest_path_tree.update_edges(edges)
+        self.assertEqual([0.0], zero_dist.tolist())
+        self.assertEqual([19.545455932617188], five_dist.tolist())
+        self.assertEqual(19.545455932617188, shortest_path_tree.lower_bound(0, 1))
+        self.assertEqual(0, shortest_path_tree.lower_bound(2, 3))
+
+    def test_update_edges_5(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/xroute_routes_pass_1_2/Core.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=3)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        galaxy.stars[0][1]['weight'] = 21.5
+        retval = (shortest_path_tree._distances[:, 0], shortest_path_tree._max_labels[:, 0], None)
+        shortest_path_tree.lighten_edge(0, 1, galaxy.stars[0][1]['weight'])
+        with patch.object(shortest_path_tree, '_dijkstra', return_value=retval) as mock_method:
+            edges = [(1, 0)]
+
+            shortest_path_tree.update_edges(edges)
+            mock_method.assert_called_once()
+            calls = mock_method.call_args
+            self.assertIsNotNone(calls.args[1])
+            self.assertIsNotNone(calls.args[2])
+
+    def test_update_edges_6(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=2)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        galaxy.stars[0][5]['weight'] = 45.390911865234375
+
+        zero_dist = shortest_path_tree.distances[0, :]
+        five_dist = shortest_path_tree.distances[5, :]
+        self.assertEqual([214.54547119140625, 366.3636474609375, 251.8181915283203, 239.09091186523438], zero_dist.tolist())
+        self.assertEqual([169.09091186523438, 324.5454406738281, 210.00001525878906, 193.63636779785156], five_dist.tolist())
+
+        shortest_path_tree.lighten_edge(0, 5, galaxy.stars[0][5]['weight'])
+        edges = [(0, 5)]
+
+        retval = (shortest_path_tree._distances[:, 0], shortest_path_tree._max_labels[:, 0], None)
+        with patch.object(shortest_path_tree, '_dijkstra', return_value=retval) as mock_dijkstra:
+            shortest_path_tree.update_edges(edges)
+            mock_dijkstra.assert_called()
+
+    def test_expand_forest_1(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        self.assertEqual(4, shortest_path_tree.num_trees)
+        zero_label = shortest_path_tree._max_labels[0, :]
+        self.assertEqual([138.18182373046875, 319.0909118652344, 132.72727966308594, 167.27273559570312], zero_label.tolist())
+
+        shortest_path_tree.expand_forest([11])
+        self.assertEqual(5, shortest_path_tree.num_trees)
+
+        zero_dist = shortest_path_tree.distances[0, :]
+        five_dist = shortest_path_tree.distances[5, :]
+        eleven_dist = shortest_path_tree.distances[11, :]
+        self.assertEqual([180.0, 328.18182373046875, 157.27273559570312, 0.0, 150.00001525878906], zero_dist.tolist())
+        self.assertEqual([131.8181915283203, 280.0, 109.09091186523438, 49.090911865234375, 105.45455169677734], five_dist.tolist())
+        self.assertEqual([107.2727279663086, 176.3636474609375, 150.0, 150.0, 0.0],
+                         eleven_dist.tolist())
+
+        zero_label = shortest_path_tree._max_labels[0, :]
+        self.assertEqual([138.18182373046875, 319.0909118652344, 132.72727966308594, 167.27273559570312, 155.4545440673828],
+                         zero_label.tolist())
+
+    def test_expand_forest_2(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        landmarks, component_landmarks = galaxy.trade.get_landmarks()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
+        self.assertEqual(4, shortest_path_tree.num_trees)
+        zero_label = shortest_path_tree._max_labels[0, :]
+        self.assertEqual([138.18182373046875, 319.0909118652344, 132.72727966308594, 167.27273559570312], zero_label.tolist())
+
+        nu_seeds = {0: 11}
+        shortest_path_tree.expand_forest(nu_seeds)
+        self.assertEqual(5, shortest_path_tree.num_trees)
+
+        zero_dist = shortest_path_tree.distances[0, :]
+        five_dist = shortest_path_tree.distances[5, :]
+        eleven_dist = shortest_path_tree.distances[11, :]
+        self.assertEqual([180.0, 328.18182373046875, 157.27273559570312, 0.0, 150.00001525878906], zero_dist.tolist())
+        self.assertEqual([131.8181915283203, 280.0, 109.09091186523438, 49.090911865234375, 105.45455169677734], five_dist.tolist())
+        self.assertEqual([107.2727279663086, 176.3636474609375, 150.0, 150.0, 0.0],
+                         eleven_dist.tolist())
+
+        zero_label = shortest_path_tree._max_labels[0, :]
+        self.assertEqual([138.18182373046875, 319.0909118652344, 132.72727966308594, 167.27273559570312, 155.4545440673828],
+                         zero_label.tolist())
+
+    def test_dijkstra_1(self) -> None:
+        args = self._make_args()
+        sourcefile = self.unpack_filename('DeltaFiles/Zarushagar-Ibara.sec')
+        readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
+                                      route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
+                                      mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
+                                      deep_space={}, map_type=args.map_type)
+
+        galaxy = Galaxy(min_btn=15, max_jump=6)
+        galaxy.read_sectors(readparms)
+        galaxy.generate_routes()
+        galaxy.trade.calculate_components()
+        shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1)
+
+        nu_distances = np.ones((shortest_path_tree._graph_len)) * float('+inf')
+        nu_max = np.ones((shortest_path_tree._graph_len)) * float('+inf')
+        nu_min_cost = shortest_path_tree._graph.min_cost(0, indirect=True)
+        seeds = [0, 36]
+        nu_distances[0] = 0
+        nu_distances[36] = 0
+        nu_weight = 54 / 1.2
+
+        nu_distances, nu_max, diagnostics = shortest_path_tree._dijkstra(nu_distances, nu_max, nu_min_cost, seeds)
+        self.assertEqual({'nodes_exceeded': 44, 'nodes_min_exceeded': 0, 'nodes_processed': 37, 'nodes_queued': 81,
+                          'nodes_tailed': 929}, diagnostics)
+        shortest_path_tree.lighten_edge(0, 5, nu_weight)
+        nu_distances, nu_max, diagnostics = shortest_path_tree._dijkstra(nu_distances, nu_max, nu_min_cost, seeds)
+        self.assertEqual({'nodes_exceeded': 1, 'nodes_min_exceeded': 0, 'nodes_processed': 6, 'nodes_queued': 7,
+                          'nodes_tailed': 146}, diagnostics)
+        raw_dist = [0.0, 142.72727966308594, 140.90908813476562, 140.90908813476562, 148.18182373046875,
+                    40.90909194946289, 106.36363983154297, 130.0, 64.54545593261719, 108.18182373046875,
+                    110.0, 104.54545593261719, 104.54545593261719, 130.0, 83.63636779785156,
+                    86.36363983154297, 110.90909576416016, 80.90909576416016, 79.09091186523438, 155.4545440673828,
+                    152.72727966308594, 111.81818389892578, 63.6363639831543, 103.63636779785156, 43.6363639831543,
+                    92.7272720336914, 40.90909194946289, 125.45455169677734, 63.6363639831543, 92.7272720336914,
+                    153.63636779785156, 104.54545593261719, 81.81818389892578, 63.6363639831543, 40.90909194946289,
+                    47.272727966308594, 0]
+        exp_dist = np.array(raw_dist)
+        delta = abs(exp_dist - nu_distances)
+        delta[np.isnan(delta)] = 0
+        self.assertTrue((delta < 0.0001).all())
+
+        raw_max = [167.27273559570312, 167.27273559570312, 153.63636779785156, 153.63636779785156, 153.63636779785156,
+                   155.4545440673828, 155.4545440673828, 153.63636779785156, 155.4545440673828, 167.27273559570312,
+                   167.27273559570312, 192.72727966308594, 153.63636779785156, 153.63636779785156, 155.4545440673828,
+                   167.27273559570312, 167.27273559570312, 192.72727966308594, 192.72727966308594, 152.72727966308594,
+                   167.27273559570312, 167.27273559570312, 245.45455932617188, 192.72727966308594, 243.63636779785156,
+                   192.72727966308594, 245.45455932617188, 167.27273559570312, 180.0, 192.72727966308594,
+                   148.18182373046875, 167.27273559570312, 167.27273559570312, 167.27273559570312, 167.27273559570312,
+                   167.27273559570312, 167.27273559570312]
+
+        exp_max = np.array(raw_max)
+        delta = abs(exp_max - nu_max)
+        delta[np.isnan(delta)] = 0
+        self.assertTrue((delta < 0.0001).all())
