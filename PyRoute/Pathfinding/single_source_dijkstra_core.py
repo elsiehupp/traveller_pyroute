@@ -58,8 +58,6 @@ def dijkstra_core(arcs: cython.list[cython.ctuple[cnp.ndarray[cython.int], cnp.n
     heap.reserve(1000)
     for index in range(0, len(seeds)):
         act_nod = seeds[index]
-        if 0 == len(arcs[act_nod][0]):
-            continue
         if -1 == parents_view[act_nod]:
             continue
         parents_view[act_nod] = -1  # Using -1 to flag "root node of tree"
