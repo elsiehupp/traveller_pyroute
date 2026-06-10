@@ -102,17 +102,19 @@ class testTradeCalculation(baseTest):
         btn.sort(key=lambda tn: tn[2]['btn'], reverse=True)
         landmarks, galaxy.trade.component_landmarks = galaxy.trade.get_landmarks(btn=btn)
 
-        btn_dex = 12
+        btn_dex = 7
         star_dex = btn[btn_dex][0].index
         targ_dex = btn[btn_dex][1].index
 
         galaxy.trade.shortest_path_tree = ApproximateShortestPathForestUnified(1, galaxy.stars,
                                                                              0.1, sources=landmarks)
+        galaxy.trade.shortest_dist_tree = ApproximateShortestPathForestUnified(1, galaxy.stars,
+                                                                             0, sources=landmarks, use_distances=True)
 
         rawroute, _ = astar_path_numpy(galaxy.trade.star_graph, star_dex, targ_dex,
                                           galaxy.trade.shortest_path_tree.lower_bound_bulk)
 
-        expected_rawroute = [9, 4, 6, 5, 11, 13]
+        expected_rawroute = [2, 12, 11, 5, 6, 4, 9]
         self.assertEqual(expected_rawroute, rawroute, "Unexpected raw route")
         route = [galaxy.star_mapping[item] for item in rawroute]
         distance = galaxy.trade.route_distance(route)
@@ -122,8 +124,8 @@ class testTradeCalculation(baseTest):
         self.assertEqual(500, tradePass, "Unexpected tradePass value")
         self.assertEqual(1000, tradeDton, "Unexpected tradeDton value")
 
-        ends = [9, 13]
-        mids = [4, 6, 5, 11]
+        ends = [2, 9]
+        mids = [12, 11, 5, 6, 4]
 
         for item in mids:
             self.assertEqual(tradeCr, galaxy.star_mapping[item].tradeOver)
@@ -140,7 +142,7 @@ class testTradeCalculation(baseTest):
             self.assertEqual(0, galaxy.star_mapping[item].passOver)
 
         start = rawroute[0]
-        expected_wt = [88.4, 166.0, 71.3, 142.6, 141.7]
+        expected_wt = [138.1, 91.2, 142.6, 71.3, 166.0, 88.4]
         self.assertEqual(len(rawroute) - 1, len(expected_wt))
         counter = 0
 
@@ -154,8 +156,8 @@ class testTradeCalculation(baseTest):
             counter += 1
 
         data = galaxy.ranges[route[0]][route[-1]]
-        self.assertEqual(16, data['actual distance'], "Unexpected route distance")
-        self.assertEqual(5, data['jumps'], "Unexpected # of jumps")
+        self.assertEqual(19, data['actual distance'], "Unexpected route distance")
+        self.assertEqual(6, data['jumps'], "Unexpected # of jumps")
 
     def test_sufficient_exhaust_value(self) -> None:
         sourcefile = self.unpack_filename('DeltaFiles/insufficient_exhaust_value/Core.sec')

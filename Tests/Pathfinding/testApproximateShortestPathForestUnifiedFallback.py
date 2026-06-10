@@ -440,16 +440,16 @@ class testApproximateShortestPathForestUnifiedFallback(baseTest):
 
         zero_dist = shortest_path_tree.distances[2, :]
         five_dist = shortest_path_tree.distances[3, :]
-        self.assertEqual([70.90909576416016, 45.45454788208008, np.inf, np.inf], zero_dist.tolist())
-        self.assertEqual([49.090911865234375, 23.636363983154297, np.inf, np.inf], five_dist.tolist())
+        self.assertEqual([70.90909576416016, 45.45454788208008, float('+inf'), float('+inf')], zero_dist.tolist())
+        self.assertEqual([49.090911865234375, 23.636363983154297, float('+inf'), float('+inf')], five_dist.tolist())
         self.assertEqual(21.81818389892578, shortest_path_tree.lower_bound(2, 3))
 
         shortest_path_tree.lighten_edge(2, 3, galaxy.stars[2][3]['weight'])
         edges = [(2, 3)]
 
         shortest_path_tree.update_edges(edges)
-        self.assertEqual([68.63636779785156, 43.181819915771484, np.inf, np.inf], zero_dist.tolist())
-        self.assertEqual([49.090911865234375, 23.636363983154297, np.inf, np.inf], five_dist.tolist())
+        self.assertEqual([68.63636779785156, 43.181819915771484, float('+inf'), float('+inf')], zero_dist.tolist())
+        self.assertEqual([49.090911865234375, 23.636363983154297, float('+inf'), float('+inf')], five_dist.tolist())
         self.assertEqual(19.545455932617188, shortest_path_tree.lower_bound(2, 3))
 
     def test_update_edges_4(self) -> None:
@@ -524,7 +524,7 @@ class testApproximateShortestPathForestUnifiedFallback(baseTest):
         galaxy.trade.calculate_components()
         landmarks, component_landmarks = galaxy.trade.get_landmarks()
         shortest_path_tree = ApproximateShortestPathForestUnified(0, galaxy.stars, 0.1, sources=landmarks)
-        galaxy.stars[0][5]['weight'] = 45.390911865234375
+        galaxy.stars[0][5]['weight'] = 40.390911865234375
 
         zero_dist = shortest_path_tree.distances[0, :]
         five_dist = shortest_path_tree.distances[5, :]
@@ -635,29 +635,24 @@ class testApproximateShortestPathForestUnifiedFallback(baseTest):
         nu_distances, nu_max, diagnostics = shortest_path_tree._dijkstra(nu_distances, nu_max, nu_min_cost, seeds)
         self.assertEqual({'nodes_exceeded': 1, 'nodes_min_exceeded': 0, 'nodes_processed': 6, 'nodes_queued': 7,
                           'nodes_tailed': 146}, diagnostics)
-        raw_dist = [0.0, 142.72727966308594, 140.90908813476562, 140.90908813476562, 148.18182373046875,
-                    40.90909194946289, 106.36363983154297, 130.0, 64.54545593261719, 108.18182373046875,
-                    110.0, 104.54545593261719, 104.54545593261719, 130.0, 83.63636779785156,
-                    86.36363983154297, 110.90909576416016, 80.90909576416016, 79.09091186523438, 155.4545440673828,
-                    152.72727966308594, 111.81818389892578, 63.6363639831543, 103.63636779785156, 43.6363639831543,
-                    92.7272720336914, 40.90909194946289, 125.45455169677734, 63.6363639831543, 92.7272720336914,
-                    153.63636779785156, 104.54545593261719, 81.81818389892578, 63.6363639831543, 40.90909194946289,
-                    47.272727966308594, 0]
+        raw_dist = [0.0, 142.72727966, 140.90908813, 140.90908813, 148.18182373, 40.90909195, 106.36363983, 130.0,
+                    64.54545593, 108.18182373, 110, 104.54545593, 104.54545593, 130.0, 83.6363678, 86.36363983,
+                    110.90909576, 80.90909576, 79.09091187, 155.45454407, 152.72727966, 111.8181839, 63.63636398,
+                    103.6363678, 43.63636398, 92.72727203, 40.90909195, 125.454545, 63.63636398, 92.72727203, 153.6363678,
+                    104.54545593, 81.8181839, 63.63636398, 40.90909195, 47.27272797, 0.0]
         exp_dist = np.array(raw_dist)
         delta = abs(exp_dist - nu_distances)
         delta[np.isnan(delta)] = 0
-        self.assertTrue((delta < 0.0001).all())
+        self.assertTrue((delta < 0.0001).all(), str(delta))
 
-        raw_max = [167.27273559570312, 167.27273559570312, 153.63636779785156, 153.63636779785156, 153.63636779785156,
-                   155.4545440673828, 155.4545440673828, 153.63636779785156, 155.4545440673828, 167.27273559570312,
-                   167.27273559570312, 192.72727966308594, 153.63636779785156, 153.63636779785156, 155.4545440673828,
-                   167.27273559570312, 167.27273559570312, 192.72727966308594, 192.72727966308594, 152.72727966308594,
-                   167.27273559570312, 167.27273559570312, 245.45455932617188, 192.72727966308594, 243.63636779785156,
-                   192.72727966308594, 245.45455932617188, 167.27273559570312, 180.0, 192.72727966308594,
-                   148.18182373046875, 167.27273559570312, 167.27273559570312, 167.27273559570312, 167.27273559570312,
-                   167.27273559570312, 167.27273559570312]
+        raw_max = [167.2727356, 167.2727356, 153.6363678, 153.6363678, 153.6363678, 155.45454407, 155.45454407,
+                   153.6363678, 155.45454407, 167.2727356, 167.2727356, 192.727272, 153.6363678, 153.6363678,
+                   155.45454407, 167.2727356, 167.2727356, 192.72727966, 192.72727966, 152.72727966, 167.2727356,
+                   167.2727356, 245.45455933, 192.727272, 243.6363678, 192.72727966, 245.454559, 167.2727356,
+                   180.0, 192.72727966, 148.18182373, 167.2727356, 167.2727356, 167.2727356, 167.2727356, 167.2727356,
+                   167.2727356]
 
         exp_max = np.array(raw_max)
         delta = abs(exp_max - nu_max)
         delta[np.isnan(delta)] = 0
-        self.assertTrue((delta < 0.0001).all())
+        self.assertTrue((delta < 0.0001).all(), str(delta))
