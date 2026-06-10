@@ -14,6 +14,7 @@ import numpy as np
 cnp.import_array()
 
 
+@cython.ccall
 @cython.boundscheck(False)
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
@@ -46,8 +47,7 @@ def dijkstra_core(arcs: cython.list[tuple[cnp.ndarray[cython.int], cnp.ndarray[c
     tail: cython.int
     dist_tail: cython.float
     heap: MinMaxHeap[dijkstra_t]
-    diagnostics = {'nodes_processed': 0, 'nodes_queued': 0, 'nodes_exceeded': 0, 'nodes_min_exceeded': 0,
-                   'nodes_tailed': 0}
+    diagnostics = {'nodes_processed': 0, 'nodes_queued': 0, 'nodes_exceeded': 0, 'nodes_min_exceeded': 0, 'nodes_tailed': 0}
 
     heap = MinMaxHeap[dijkstra_t]()
     heap.reserve(1000)
@@ -67,7 +67,7 @@ def dijkstra_core(arcs: cython.list[tuple[cnp.ndarray[cython.int], cnp.ndarray[c
         tail = result.act_nod
 
         if dist_tail > distance_labels_view[tail] or dist_tail + min_cost_view[tail] > max_neighbour_labels_view[tail]:
-            if dist_tail > distance_labels[tail] - 1e-8:
+            if dist_tail > distance_labels_view[tail] - 1e-8:
                 diagnostics['nodes_exceeded'] += 1
             else:
                 diagnostics['nodes_min_exceeded'] += 1
