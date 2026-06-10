@@ -19,7 +19,7 @@ cnp.import_array()
 @cython.initializedcheck(False)
 @cython.nonecheck(False)
 @cython.wraparound(False)
-def dijkstra_core(arcs: cython.list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]],
+def dijkstra_core(arcs: cython.list[cython.ctuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]],
                   distance_labels: cnp.ndarray[cython.float], divisor: cython.float,
                   seeds: cython.list[cython.int],
                   max_neighbour_labels: cnp.ndarray[cython.float], min_cost: cnp.ndarray[cython.float]) -> tuple:
@@ -40,7 +40,7 @@ def dijkstra_core(arcs: cython.list[tuple[cnp.ndarray[cython.int], cnp.ndarray[c
     distance_labels_view: cython.double[:] = distance_labels
     max_neighbour_labels_view: cython.double[:] = max_neighbour_labels
     min_cost_view: cython.double[:] = min_cost
-    parents: cnp.ndarray[cython.int] = np.ones(len(arcs), dtype=int) * -100  # Using -100 to track "not considered during processing"
+    parents: cnp.ndarray[cython.int] = np.ones(len(arcs), dtype=np.int64) * -100  # Using -100 to track "not considered during processing"
     parents_view: cython.long[:] = parents
     active_nodes_view: cython.long[:]
     active_costs_view: cython.double[:]
@@ -52,10 +52,11 @@ def dijkstra_core(arcs: cython.list[tuple[cnp.ndarray[cython.int], cnp.ndarray[c
     nodes_exceeded: cython.int = 0
     nodes_min_exceeded: cython.int = 0
     nodes_tailed: cython.int = 0
+    label: cython.float
 
     heap = MinMaxHeap[dijkstra_t]()
     heap.reserve(1000)
-    for index in range(len(seeds)):
+    for index in range(0, len(seeds)):
         act_nod = seeds[index]
         if 0 == len(arcs[act_nod][0]):
             continue
@@ -102,7 +103,11 @@ def dijkstra_core(arcs: cython.list[tuple[cnp.ndarray[cython.int], cnp.ndarray[c
             nodes_queued += 1
 
         # update max label _after_ neighbours are processed, to minimise the max_label as far as possible
-        max_neighbour_labels_view[tail] = max(distance_labels[neighbours[0]])
+        for index in range(0, num_nodes):
+            act_nod = active_nodes_view[index]
+            label = distance_labels_view[act_nod]
+            if label > max_neighbour_labels_view[tail]:
+                max_neighbour_labels_view[tail] = label
 
     diagnostics = {'nodes_processed': nodes_processed, 'nodes_queued': nodes_queued, 'nodes_exceeded': nodes_exceeded,
                    'nodes_min_exceeded': nodes_min_exceeded, 'nodes_tailed': nodes_tailed}
