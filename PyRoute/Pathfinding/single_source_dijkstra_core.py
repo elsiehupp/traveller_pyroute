@@ -32,7 +32,7 @@ def dijkstra_core(arcs: cython.list[tuple[cnp.ndarray[cython.int], cnp.ndarray[c
     if not 0 < divisor <= 1.0:
         raise ValueError("divisor must be positive and <= 1.0")
 
-    neighbours: tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]
+    neighbours: cython.ctuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]
     act_wt: cython.float
     act_nod: cython.int
     num_nodes: cython.size_t
