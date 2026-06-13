@@ -61,6 +61,7 @@ def _calc_branching_factor(nodes_queued: cython.int, path_len: cython.int):
     return round(new, 3)
 
 
+@cython.ccall
 @cython.boundscheck(False)
 @cython.initializedcheck(False)
 @cython.wraparound(False)
@@ -127,9 +128,8 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
     # Maps explored nodes to parent closest to the source.
     explored: dict[cython.int, cython.int] = {}
 
-    # The queue stores priority, cost to reach, node,  and parent.
-    # Uses Python heapq to keep in priority order.
-    # The nodes themselves, being integers, are directly comparable.
+    # The queue stores priority, cost to reach, node, and parent.
+    # Comparisons are handled by astar_t directly.
     queue: MinMaxHeap[astar_t] = MinMaxHeap[astar_t]()
     queue.reserve(500)
     queue.insert({'augment': potentials_view[source], 'dist': 0.0, 'curnode': source, 'parent': -1})
