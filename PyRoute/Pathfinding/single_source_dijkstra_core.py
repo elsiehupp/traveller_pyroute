@@ -53,7 +53,6 @@ def dijkstra_core(arcs: cython.list[cython.ctuple[cnp.ndarray[cython.int], cnp.n
     nodes_exceeded: cython.int = 0
     nodes_min_exceeded: cython.int = 0
     nodes_tailed: cython.int = 0
-    label: cython.float
     max_label: cython.float
 
     heap = MinMaxHeap[dijkstra_t]()
@@ -89,26 +88,25 @@ def dijkstra_core(arcs: cython.list[cython.ctuple[cnp.ndarray[cython.int], cnp.n
         num_nodes = len(active_nodes_view)
 
         active_costs_view = neighbours[1]
+        max_label = 0
 
+        # update max_label while processing neighbours, as we've got the lid off anyway
         for index in range(0, num_nodes):
             act_nod = active_nodes_view[index]
             if dist_tail + active_costs_view[index] >= distance_labels_view[act_nod]:
+                if distance_labels_view[act_nod] > max_label:
+                    max_label = distance_labels_view[act_nod]
                 nodes_tailed += 1
                 continue
             act_wt = dist_tail + divisor * active_costs_view[index]
+            if act_wt > max_label:
+                max_label = act_wt
 
             distance_labels_view[act_nod] = act_wt
             parents_view[act_nod] = tail
             heap.insert({'act_wt': act_wt, 'act_nod': act_nod})
             nodes_queued += 1
 
-        # update max label _after_ neighbours are processed, to minimise the max_label as far as possible
-        max_label = distance_labels_view[active_nodes_view[0]]
-        for index in range(1, num_nodes):
-            act_nod = active_nodes_view[index]
-            label = distance_labels_view[act_nod]
-            if label > max_label:
-                max_label = label
         max_neighbour_labels_view[tail] = max_label
 
     diagnostics = {'nodes_processed': nodes_processed, 'nodes_queued': nodes_queued, 'nodes_exceeded': nodes_exceeded,
