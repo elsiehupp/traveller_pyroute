@@ -581,10 +581,12 @@ class TradeCalculation(RouteCalculation):
             # exhausted = data['count'] >= data['exhaust']
             if reweight and (data['count'] < data['exhaust']):
                 data['weight'] -= (data['weight'] - data['distance']) / self.route_reuse
-                self.star_graph.lighten_edge(start.index, end.index, data['weight'])
-                self.shortest_path_tree.lighten_edge(start.index, end.index, data['weight'])
+                startdex = start.index
+                enddex = end.index
+                self.star_graph.lighten_edge(startdex, enddex, data['weight'])
+                self.shortest_path_tree.lighten_edge(startdex, enddex, data['weight'])
                 # Edge can only trip an update if it's not exhausted
-                edges.append((start.index, end.index))
+                edges.append((startdex, enddex))
                 data['count'] += 1
             data['trade'] += tradeCr
             start = end
