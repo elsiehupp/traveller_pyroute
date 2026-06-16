@@ -96,7 +96,7 @@ def astar_path_numpy(G, source: cython.int, target: cython.int, bulk_heuristic,
 @cython.nonecheck(False)
 @cython.wraparound(False)
 @cython.returns(tuple[list[cython.int], dict])
-def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]], diagnostics: cython.bint,
+def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]], diagnostics: cython.bint,
                      distances: cnp.ndarray[cython.float], potentials: cnp.ndarray[cython.float], source: cython.int,
                      target: cython.int, upbound: cython.float) -> tuple[list, dict]:
     distances_view: cython.double[:] = distances
@@ -114,7 +114,7 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
     new_upbounds: cython.int = 0
     targ_exhausted: cython.int = 0
     revis_continue: cython.int = 0
-    path: list[cython.int] = []
+    path: cython.list[cython.int] = []
     diag = {}
 
     act_nod: cython.int
@@ -126,7 +126,7 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
     counter: cython.int
 
     # Maps explored nodes to parent closest to the source.
-    explored: dict[cython.int, cython.int] = {}
+    explored: cython.dict[cython.int, cython.int] = {}
 
     # The queue stores priority, cost to reach, node, and parent.
     # Comparisons are handled by astar_t directly.
