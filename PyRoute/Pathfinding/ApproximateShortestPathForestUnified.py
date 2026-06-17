@@ -119,14 +119,20 @@ class ApproximateShortestPathForestUnified:
     @cython.nonecheck(False)
     @cython.wraparound(False)
     def update_edges(self, edges: list[tuple[cython.int, cython.int]]):  # noqa: ANN201
-        dropnodes = set()
-        dropspecific = []
+        dropnodes = cython.set()
+        dropspecific: list[list[cython.int]] = []
         tree_dex = list(range(self._num_trees))
         i: cython.int
         min_cost: cnp.ndarray[cython.float]
-        shelf: tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]
+        shelf: cython.tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]
         floatinf = float('+inf')
-        arcs = self._graph._arcs
+        arcs: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float], dict, cnp.ndarray[float]]] = self._graph._arcs
+        weight: cython.float
+        weight_sq: cython.float
+        left: cython.int
+        right: cython.int
+        leftdist: cnp.ndarray[cython.float]
+        rightdist: cnp.ndarray[cython.float]
 
         for _ in tree_dex:
             dropspecific.append([])
