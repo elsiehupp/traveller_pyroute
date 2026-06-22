@@ -110,7 +110,6 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
     revisited: cython.int = 0
     g_exhausted: cython.int = 0
     f_exhausted: cython.int = 0
-    nu_upbound: cython.float
     new_upbounds: cython.int = 0
     targ_exhausted: cython.int = 0
     revis_continue: cython.int = 0
@@ -131,7 +130,6 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
     # The queue stores priority, cost to reach, node, and parent.
     # Comparisons are handled by astar_t directly.
     queue: MinMaxHeap[astar_t] = MinMaxHeap[astar_t]()
-    queue.reserve(500)
     queue.insert({'augment': potentials_view[source], 'dist': 0.0, 'curnode': source, 'parent': -1})
 
     while 0 < queue.size():
@@ -183,16 +181,6 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
         targdex = -1
 
         num_nodes = len(active_nodes_view)
-        for i in range(num_nodes):
-            act_nod = active_nodes_view[i]
-            if act_nod == target:
-                targdex = i
-                nu_upbound = dist + active_costs_view[targdex]
-                if nu_upbound < upbound:
-                    upbound = nu_upbound
-                    new_upbounds += 1
-                    distances_view[target] = upbound
-                break
 
         # Now unconditionally queue _all_ nodes that are still active, worrying about filtering out the bound-busting
         # neighbours later.
@@ -200,6 +188,8 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
         for i in range(num_nodes):
             act_nod = active_nodes_view[i]
             act_wt = dist + active_costs_view[i]
+            if target == act_nod:
+                targdex = i
             if act_wt > distances_view[act_nod]:
                 continue
             aug_wt = act_wt + potentials_view[act_nod]
@@ -208,6 +198,9 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
             distances_view[act_nod] = act_wt
             queue.insert({'augment': aug_wt, 'dist': act_wt, 'curnode': act_nod, 'parent': curnode})
             counter += 1
+            if target == act_nod:
+                upbound = aug_wt
+                new_upbounds += 1
 
         if 0 == counter:
             if -1 != targdex:
