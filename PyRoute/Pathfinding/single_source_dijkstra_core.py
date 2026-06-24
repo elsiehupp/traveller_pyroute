@@ -56,7 +56,7 @@ def dijkstra_core(arcs: cython.list[cython.ctuple[cnp.ndarray[cython.int], cnp.n
     max_label: cython.float
 
     heap = MinMaxHeap[dijkstra_t]()
-    heap.reserve(1000)
+    heap.reserve(len(seeds))
     for index in range(0, len(seeds)):
         act_nod = seeds[index]
         if -1 == parents_view[act_nod]:
