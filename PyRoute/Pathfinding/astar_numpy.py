@@ -26,6 +26,7 @@ import numpy as np
 cnp.import_array()
 
 float64max = np.finfo(np.float64).max
+ROOT_NODE: cython.const[cython.int] = -1
 
 
 @cython.cdivision(True)
@@ -130,7 +131,7 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
     # The queue stores priority, cost to reach, node, and parent.
     # Comparisons are handled by astar_t directly.
     queue: MinMaxHeap[astar_t] = MinMaxHeap[astar_t]()
-    queue.insert({'augment': potentials_view[source], 'dist': 0.0, 'curnode': source, 'parent': -1})
+    queue.insert({'augment': potentials_view[source], 'dist': 0.0, 'curnode': source, 'parent': ROOT_NODE})
 
     while 0 < queue.size():
         # Pop the smallest item from queue.
@@ -143,7 +144,7 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
         if curnode == target:
             path.append(curnode)
             node = parent
-            while node != -1:
+            while node != ROOT_NODE:
                 assert node not in path, "Node " + str(node) + " duplicated in discovered path"
                 path.append(node)
                 node = explored[node]
@@ -162,7 +163,7 @@ def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], c
         if curnode in explored:
             revisited += 1
             # Do not override the parent of starting node
-            if explored[curnode] == -1:
+            if explored[curnode] == ROOT_NODE:
                 continue
 
             # We've found a bad path, just move on

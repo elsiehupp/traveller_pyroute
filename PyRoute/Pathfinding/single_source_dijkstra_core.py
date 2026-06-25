@@ -12,6 +12,7 @@ from cython.cimports.minmaxheap import MinMaxHeap, dijkstra_t
 import numpy as np
 
 cnp.import_array()
+ROOT_NODE: cython.const[cython.int] = -1
 
 
 @cython.ccall
@@ -59,9 +60,9 @@ def dijkstra_core(arcs: cython.list[cython.ctuple[cnp.ndarray[cython.int], cnp.n
     heap.reserve(len(seeds))
     for index in range(0, len(seeds)):
         act_nod = seeds[index]
-        if -1 == parents_view[act_nod]:
+        if ROOT_NODE == parents_view[act_nod]:
             continue
-        parents_view[act_nod] = -1  # Using -1 to flag "root node of tree"
+        parents_view[act_nod] = ROOT_NODE
         heap.insert({'act_wt': distance_labels_view[act_nod], 'act_nod': act_nod})
         nodes_queued += 1
 
