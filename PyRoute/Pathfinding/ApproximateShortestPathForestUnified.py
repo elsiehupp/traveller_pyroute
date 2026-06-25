@@ -13,7 +13,14 @@ import numpy as np
 from PyRoute.Star import Star
 from PyRoute.Pathfinding.DistanceGraph import DistanceGraph
 from PyRoute.Pathfinding.single_source_dijkstra import implicit_shortest_path_dijkstra_distance_graph
-from single_source_dijkstra_core import dijkstra_core
+try:
+    from single_source_dijkstra_core import dijkstra_core
+except ModuleNotFoundError:
+    from PyRoute.Pathfinding.single_source_dijkstra_core_fallback import dijkstra_core
+except ImportError:
+    from PyRoute.Pathfinding.single_source_dijkstra_core_fallback import dijkstra_core
+except AttributeError:
+    from PyRoute.Pathfinding.single_source_dijkstra_core_fallback import dijkstra_core
 
 cnp.import_array()
 
