@@ -135,11 +135,7 @@ class RouteCalculation(object):
         if code1.industrial or code2.industrial:
             btn += 1 if code1.match_in_codes(code2) else 0
 
-        if not AllyGen.are_allies(star1.alg_code, star2.alg_code):
-            btn -= 1
-
-            if star1.alg_code == 'Wild' or star2.alg_code == 'Wild':
-                btn -= 1
+        btn += RouteCalculation._get_btn_allies(star1.alg_code, star2.alg_code)
 
         if not distance:
             distance = star1.distance(star2)
@@ -147,6 +143,19 @@ class RouteCalculation(object):
         btn += RouteCalculation.get_btn_offset(distance)
 
         return min(btn, RouteCalculation.get_max_btn(star1.wtn, star2.wtn))
+
+    @staticmethod
+    @functools.cache
+    def _get_btn_allies(code1: Optional[str], code2: Optional[str]) -> int:
+        if isinstance(code1, str) and isinstance(code2, str) and code1 > code2:
+            return RouteCalculation._get_btn_allies(code2, code1)
+        mod = 0
+        if not AllyGen.are_allies(code1, code2):
+            mod -= 1
+
+            if code1 == 'Wild' or code2 == 'Wild':
+                mod -= 1
+        return mod
 
     @staticmethod
     def _get_btn_upper_bound(star1, star2, max_range, min_btn, distance=None):
