@@ -643,6 +643,14 @@ class TradeCodes(object):
     def low_per_capita_gwp(self) -> bool:
         return self.extreme or self.poor or self.nonindustrial or self.low
 
+    @functools.cached_property
+    def ag_code_boost(self) -> bool:
+        return self.agricultural or self.needs_agricultural
+
+    @functools.cached_property
+    def in_code_boost(self) -> bool:
+        return self.industrial or self.nonindustrial
+
     def match_ag_codes(self, code) -> bool:
         return (self.agricultural and code.needs_agricultural) or (self.needs_agricultural and code.agricultural)
 
