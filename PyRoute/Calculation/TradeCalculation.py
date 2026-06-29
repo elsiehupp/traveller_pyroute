@@ -149,8 +149,10 @@ class TradeCalculation(RouteCalculation):
         loball = [item for item in self.galaxy.ranges if item.wtn < min_wtn and not item.is_redzone]
 
         def foo_boost(x):
-            return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost) or\
-                   (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost)
+            return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost
+                    and (x[0].tradeCode.agricultural or x[1].tradeCode.agricultural)) or\
+                   (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost
+                    and (x[0].tradeCode.industrial or x[1].tradeCode.industrial))
 
         ranges = [(star, neighbour) for (star, neighbour) in itertools.combinations(hiball, 2)
                   if (dist := star.distance(neighbour)) <= self._max_dist(star.wtn, neighbour.wtn, True)
