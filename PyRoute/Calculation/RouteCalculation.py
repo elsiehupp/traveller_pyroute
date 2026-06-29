@@ -158,7 +158,7 @@ class RouteCalculation(object):
         return mod
 
     @staticmethod
-    def _get_btn_upper_bound(star1, star2, max_range, min_btn, distance=None):
+    def _get_btn_upper_bound(star1, star2, max_range, min_btn, distance=None, offset: int = 2):
         """
         Return an _upper bound_ on the BTN between star1 and star2.  If the upper bound on BTN
         doesn't meet/beat the minimum BTN, then the _actual_ BTN, which also doesn't meet/beat
@@ -167,7 +167,7 @@ class RouteCalculation(object):
         supplied min_btn.
         """
         # Assuming BTN, as per self.get_btn, is boosted by both agricultural and industrial matches
-        btn = star1.wtn + star2.wtn + 2
+        btn = star1.wtn + star2.wtn + offset
 
         if not distance:
             distance = star1.distance(star2)
