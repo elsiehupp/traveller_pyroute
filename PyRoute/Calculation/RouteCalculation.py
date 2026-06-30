@@ -166,7 +166,9 @@ class RouteCalculation(object):
         max_range apart in pc, set the returned BTN upper bound to greater of upper-bounded BTN and
         supplied min_btn.
         """
-        # Assuming BTN, as per self.get_btn, is boosted by both agricultural and industrial matches
+        # Default assumes BTN is boosted by both agricultural and industrial matches
+        # Offset of 1 assumes BTN is boosted by one match, agricultural xor industrial
+        # Offset of 0 assumes no boost.
         btn = star1.wtn + star2.wtn + offset
 
         if not distance:
