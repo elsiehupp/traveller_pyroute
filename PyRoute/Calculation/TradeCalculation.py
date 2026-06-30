@@ -148,19 +148,19 @@ class TradeCalculation(RouteCalculation):
         hiball = [item for item in self.galaxy.ranges if item.wtn >= min_wtn and not item.is_redzone]
         loball = [item for item in self.galaxy.ranges if item.wtn < min_wtn and not item.is_redzone]
 
-        def two_boost(x):
+        def two_boost(x: tuple[Star, Star]) -> bool:
             return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost
                     and (x[0].tradeCode.agricultural or x[1].tradeCode.agricultural)) and \
                    (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost
                     and (x[0].tradeCode.industrial or x[1].tradeCode.industrial))
 
-        def one_boost(x):
+        def one_boost(x: tuple[Star, Star]) -> bool:
             return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost
                     and (x[0].tradeCode.agricultural or x[1].tradeCode.agricultural)) ^ \
                    (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost
                     and (x[0].tradeCode.industrial or x[1].tradeCode.industrial))
 
-        def foo_boost(x):
+        def foo_boost(x: tuple[Star, Star]) -> bool:
             return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost
                     and (x[0].tradeCode.agricultural or x[1].tradeCode.agricultural)) or \
                    (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost

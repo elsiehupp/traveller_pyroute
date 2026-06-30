@@ -127,15 +127,13 @@ class RouteCalculation(object):
         Calculate the BTN between two stars, which is the sum of the worlds
         WTNs plus a modifier for types, minus a modifier for distance.
         """
-        btn = star1.wtn + star2.wtn
+        btn = star1.wtn + star2.wtn + RouteCalculation._get_btn_allies(star1.alg_code, star2.alg_code)
         code1 = star1.tradeCode
         code2 = star2.tradeCode
-        if code1.ag_code_boost and (code1.agricultural or code2.agricultural):
+        if code1.ag_code_boost and code2.ag_code_boost and (code1.agricultural or code2.agricultural):
             btn += 1 if code1.match_ag_codes(code2) else 0
-        if code1.in_code_boost and (code1.industrial or code2.industrial):
+        if code1.in_code_boost and code2.in_code_boost and (code1.industrial or code2.industrial):
             btn += 1 if code1.match_in_codes(code2) else 0
-
-        btn += RouteCalculation._get_btn_allies(star1.alg_code, star2.alg_code)
 
         if not distance:
             distance = star1.distance(star2)
