@@ -148,21 +148,48 @@ class TradeCalculation(RouteCalculation):
         hiball = [item for item in self.galaxy.ranges if item.wtn >= min_wtn and not item.is_redzone]
         loball = [item for item in self.galaxy.ranges if item.wtn < min_wtn and not item.is_redzone]
 
+        def two_boost(x: tuple[Star, Star]) -> bool:
+            return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost
+                    and (x[0].tradeCode.agricultural or x[1].tradeCode.agricultural)) and \
+                   (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost
+                    and (x[0].tradeCode.industrial or x[1].tradeCode.industrial))
+
+        def one_boost(x: tuple[Star, Star]) -> bool:
+            return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost
+                    and (x[0].tradeCode.agricultural or x[1].tradeCode.agricultural)) ^ \
+                   (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost
+                    and (x[0].tradeCode.industrial or x[1].tradeCode.industrial))
+
+        def foo_boost(x: tuple[Star, Star]) -> bool:
+            return (x[0].tradeCode.ag_code_boost and x[1].tradeCode.ag_code_boost
+                    and (x[0].tradeCode.agricultural or x[1].tradeCode.agricultural)) or \
+                   (x[0].tradeCode.in_code_boost and x[1].tradeCode.in_code_boost
+                    and (x[0].tradeCode.industrial or x[1].tradeCode.industrial))
+
         ranges = [(star, neighbour) for (star, neighbour) in itertools.combinations(hiball, 2)
                   if (dist := star.distance(neighbour)) <= self._max_dist(star.wtn, neighbour.wtn, True)
                   and self._get_btn_upper_bound(star, neighbour, max_range, min_btn, distance=dist) >= min_btn
                   ]
-        lo_ranges = [(star, neighbour) for (star, neighbour) in itertools.combinations(loball, 2)
-                     if (star.distance(neighbour)) <= max_range
-                     ]
-        mid_ranges = [(star, neighbour) for (star, neighbour) in itertools.product(hiball, loball)
-                      if (star.distance(neighbour)) <= max_range
-                      ]
-        ranges.extend(lo_ranges)
-        ranges.extend(mid_ranges)
+        hi_hi_ranges = [(star, neighbour) for (star, neighbour) in filter(two_boost, ranges)]
+        hi_hi_ranges1 = [(star, neighbour) for (star, neighbour) in filter(one_boost, ranges)
+                         if self._get_btn_upper_bound(star, neighbour, max_range, min_btn, offset=1) >= min_btn
+                         ]
+        hi_hi_ranges2 = [(star, neighbour) for (star, neighbour) in itertools.filterfalse(foo_boost, ranges)
+                         if self._get_btn_upper_bound(star, neighbour, max_range, min_btn, offset=0) >= min_btn
+                         ]
+        lo_lo_ranges = [(star, neighbour) for (star, neighbour) in itertools.combinations(loball, 2)
+                        if (star.distance(neighbour)) <= max_range
+                        ]
+        hi_lo_ranges = [(star, neighbour) for (star, neighbour) in itertools.product(hiball, loball)
+                        if (star.distance(neighbour)) <= max_range
+                        ]
+        hi_hi_ranges.extend(lo_lo_ranges)
+        hi_hi_ranges.extend(hi_lo_ranges)
+        hi_hi_ranges.extend(hi_hi_ranges1)
+        hi_hi_ranges.extend(hi_hi_ranges2)
         self.logger.info("Routes with endpoints more than " + str(max_route_dist) + " pc apart, trimmed")
 
-        return ranges
+        return hi_hi_ranges
 
     def generate_routes(self) -> None:
         """

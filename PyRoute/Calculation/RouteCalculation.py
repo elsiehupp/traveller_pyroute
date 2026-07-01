@@ -127,19 +127,13 @@ class RouteCalculation(object):
         Calculate the BTN between two stars, which is the sum of the worlds
         WTNs plus a modifier for types, minus a modifier for distance.
         """
-        btn = star1.wtn + star2.wtn
+        btn = star1.wtn + star2.wtn + RouteCalculation._get_btn_allies(star1.alg_code, star2.alg_code)
         code1 = star1.tradeCode
         code2 = star2.tradeCode
-        if code1.agricultural or code2.agricultural:
+        if code1.ag_code_boost and code2.ag_code_boost and (code1.agricultural or code2.agricultural):
             btn += 1 if code1.match_ag_codes(code2) else 0
-        if code1.industrial or code2.industrial:
+        if code1.in_code_boost and code2.in_code_boost and (code1.industrial or code2.industrial):
             btn += 1 if code1.match_in_codes(code2) else 0
-
-        if not AllyGen.are_allies(star1.alg_code, star2.alg_code):
-            btn -= 1
-
-            if star1.alg_code == 'Wild' or star2.alg_code == 'Wild':
-                btn -= 1
 
         if not distance:
             distance = star1.distance(star2)
@@ -149,7 +143,20 @@ class RouteCalculation(object):
         return min(btn, RouteCalculation.get_max_btn(star1.wtn, star2.wtn))
 
     @staticmethod
-    def _get_btn_upper_bound(star1, star2, max_range, min_btn, distance=None):
+    @functools.cache
+    def _get_btn_allies(code1: Optional[str], code2: Optional[str]) -> int:
+        if isinstance(code1, str) and isinstance(code2, str) and code1 > code2:
+            return RouteCalculation._get_btn_allies(code2, code1)
+        mod = 0
+        if not AllyGen.are_allies(code1, code2):
+            mod -= 1
+
+            if code1 == 'Wild' or code2 == 'Wild':
+                mod -= 1
+        return mod
+
+    @staticmethod
+    def _get_btn_upper_bound(star1, star2, max_range, min_btn, distance=None, offset: int = 2):
         """
         Return an _upper bound_ on the BTN between star1 and star2.  If the upper bound on BTN
         doesn't meet/beat the minimum BTN, then the _actual_ BTN, which also doesn't meet/beat
@@ -157,8 +164,10 @@ class RouteCalculation(object):
         max_range apart in pc, set the returned BTN upper bound to greater of upper-bounded BTN and
         supplied min_btn.
         """
-        # Assuming BTN, as per self.get_btn, is boosted by both agricultural and industrial matches
-        btn = star1.wtn + star2.wtn + 2
+        # Default assumes BTN is boosted by both agricultural and industrial matches
+        # Offset of 1 assumes BTN is boosted by one match, agricultural xor industrial
+        # Offset of 0 assumes no boost.
+        btn = star1.wtn + star2.wtn + offset + RouteCalculation._get_btn_allies(star1.alg_code, star2.alg_code)
 
         if not distance:
             distance = star1.distance(star2)
