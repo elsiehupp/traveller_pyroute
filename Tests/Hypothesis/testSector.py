@@ -68,6 +68,7 @@ class testSector(unittest.TestCase):
     @example('#0 ', '# 00,0')
     @example('# Woop Woop Sector', '# 864+,059 -')
     @example('#Sector Sector', '# 00,0')
+    @example('#Sector0 Sector', '# 00,0')
     def test_create_sector(self, s, t) -> None:
         sector = None
         allowed_value_errors = ["Name string too short", "Position string too short", "Position string malformed",
@@ -87,7 +88,7 @@ class testSector(unittest.TestCase):
 
         sec_name = sector.sector_name()
         self.assertIsNotNone(sec_name)
-        self.assertTrue('Sector' not in sec_name)
+        self.assertTrue(' Sector' not in sec_name)
 
         to_string = str(sector)
         self.assertIsNotNone(to_string)

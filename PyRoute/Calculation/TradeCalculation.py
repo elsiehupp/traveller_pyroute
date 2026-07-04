@@ -98,6 +98,7 @@ class TradeCalculation(RouteCalculation):
         self.penumbra_routes = 0
 
         self.shortest_path_tree = None
+        self.shortest_dist_tree = None
         # Track inter-sector passenger imbalances
         self.sector_passenger_balance = TradeBalance(stat_field="passengers", region=galaxy)
         # Track inter-sector trade imbalances
@@ -278,7 +279,14 @@ class TradeCalculation(RouteCalculation):
         # This sets up the approximate-shortest-path bounds to be during the first pathfinding call.
         self.shortest_path_tree = ApproximateShortestPathForestUnified(source.index, self.galaxy.stars,
                                                                              self.epsilon, sources=landmarks)
+        self.shortest_dist_tree = ApproximateShortestPathForestUnified(source.index, self.galaxy.stars,
+                                                                             0, sources=landmarks,
+                                                                             use_distances=True)
         self.star_len_root = max(1, math.floor(math.sqrt(len(self.star_graph))) // 2)
+
+        np.seterr(invalid="ignore")
+        btn = [(s, n, d) for (s, n, d) in btn if (lobound := self.shortest_dist_tree.lower_bound(s.index, n.index) > 0)
+               and (self.get_btn(s, n, lobound) >= self.min_btn)]
 
         base_btn = 0  # pragma: no mutate
         counter = 0
@@ -573,10 +581,12 @@ class TradeCalculation(RouteCalculation):
             # exhausted = data['count'] >= data['exhaust']
             if reweight and (data['count'] < data['exhaust']):
                 data['weight'] -= (data['weight'] - data['distance']) / self.route_reuse
-                self.star_graph.lighten_edge(start.index, end.index, data['weight'])
-                self.shortest_path_tree.lighten_edge(start.index, end.index, data['weight'])
+                startdex = start.index
+                enddex = end.index
+                self.star_graph.lighten_edge(startdex, enddex, data['weight'])
+                self.shortest_path_tree.lighten_edge(startdex, enddex, data['weight'])
                 # Edge can only trip an update if it's not exhausted
-                edges.append((start.index, end.index))
+                edges.append((startdex, enddex))
                 data['count'] += 1
             data['trade'] += tradeCr
             start = end

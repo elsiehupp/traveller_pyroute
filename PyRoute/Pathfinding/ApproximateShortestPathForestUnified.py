@@ -13,7 +13,14 @@ import numpy as np
 from PyRoute.Star import Star
 from PyRoute.Pathfinding.DistanceGraph import DistanceGraph
 from PyRoute.Pathfinding.single_source_dijkstra import implicit_shortest_path_dijkstra_distance_graph
-from single_source_dijkstra_core import dijkstra_core
+try:
+    from single_source_dijkstra_core import dijkstra_core
+except ModuleNotFoundError:
+    from PyRoute.Pathfinding.single_source_dijkstra_core_fallback import dijkstra_core
+except ImportError:
+    from PyRoute.Pathfinding.single_source_dijkstra_core_fallback import dijkstra_core
+except AttributeError:
+    from PyRoute.Pathfinding.single_source_dijkstra_core_fallback import dijkstra_core
 
 cnp.import_array()
 
@@ -34,9 +41,9 @@ class ApproximateShortestPathForestUnified:
     _distances: cython.declare(cnp.ndarray(cython.float, ndim=2), 'readonly')
     _max_labels: cnp.ndarray(cython.float, ndim=2)
 
-    def __init__(self, source, graph, epsilon, sources=None):
+    def __init__(self, source, graph, epsilon, sources=None, use_distances: bool = False):
         seeds, source, num_trees = self._get_sources(graph, source, sources)
-        self._graph = DistanceGraph(graph)
+        self._graph = DistanceGraph(graph, use_distances)
         self._source = source
         self._epsilon = epsilon
         # memoising this because its value gets used _heavily_ in lower bound calcs, called during heuristic generation
@@ -62,7 +69,7 @@ class ApproximateShortestPathForestUnified:
 
     def lower_bound(self, source, target) -> float:
         raw = np.abs(self._distances[source, :] - self._distances[target, :])
-        raw = raw[~np.isinf(raw)]
+        raw = raw[np.isfinite(raw)]
         if 0 == len(raw):
             return 0
         return np.max(raw)
@@ -119,14 +126,20 @@ class ApproximateShortestPathForestUnified:
     @cython.nonecheck(False)
     @cython.wraparound(False)
     def update_edges(self, edges: list[tuple[cython.int, cython.int]]):  # noqa: ANN201
-        dropnodes = set()
-        dropspecific = []
+        dropnodes = cython.set()
+        dropspecific: list[list[cython.int]] = []
         tree_dex = list(range(self._num_trees))
         i: cython.int
         min_cost: cnp.ndarray[cython.float]
-        shelf: tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]
+        shelf: cython.tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]
         floatinf = float('+inf')
-        arcs = self._graph._arcs
+        arcs: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float], dict, cnp.ndarray[float]]] = self._graph._arcs
+        weight: cython.float
+        weight_sq: cython.float
+        left: cython.int
+        right: cython.int
+        leftdist: cnp.ndarray[cython.float]
+        rightdist: cnp.ndarray[cython.float]
 
         for _ in tree_dex:
             dropspecific.append([])

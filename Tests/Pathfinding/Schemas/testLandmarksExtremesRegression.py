@@ -19,15 +19,16 @@ class testLandmarksExtremesRegression(baseTest):
         sourcefile = self.unpack_filename('../DeltaFiles/zero_arg_in_transpose_landmarks/Bar\'kakr.sec')
 
         args = self._make_args()
-        args.route_btn = 15
+        args.route_btn = 4
         readparms = ReadSectorOptions(sectors=[sourcefile], pop_code=args.pop_code, ru_calc=args.ru_calc,
                                       route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
                                       mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=False,
                                       deep_space={}, map_type=args.map_type)
 
-        galaxy = Galaxy(min_btn=15, max_jump=4)
+        galaxy = Galaxy(min_btn=4, max_jump=4)
         galaxy.read_sectors(readparms)
         galaxy.output_path = args.output
+        self.assertEqual(101, len(galaxy.stars))
 
         galaxy.generate_routes()
         galaxy.trade.calculate_components()
@@ -37,7 +38,7 @@ class testLandmarksExtremesRegression(baseTest):
 
         foo = LandmarksTriaxialExtremes(galaxy)
         expected = [
-            {0: 56}, {0: 95}, {0: 43}, {0: 64}, {0: 58}, {0: 59}
+            {0: 56}, {0: 95}, {0: 43}, {0: 74}, {0: 64}, {0: 58}
         ]
         actual, _ = foo.get_landmarks(btn=btn)
         self.assertEqual(expected, actual)

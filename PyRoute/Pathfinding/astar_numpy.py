@@ -22,10 +22,12 @@ from cython.cimports.minmaxheap import MinMaxHeap, astar_t
 
 import networkx as nx
 import numpy as np
+import math
 
 cnp.import_array()
 
 float64max = np.finfo(np.float64).max
+ROOT_NODE: cython.const[cython.int] = -1
 
 
 @cython.cdivision(True)
@@ -36,31 +38,37 @@ def _calc_branching_factor(nodes_queued: cython.int, path_len: cython.int):
     power: cython.float
     if path_len == nodes_queued or 1 > path_len or 1 > nodes_queued:
         return 1.0
+    if path_len == 1.0:
+        return nodes_queued - 1.0
+    if path_len == 2.0:
+        raw = 0.5 * (-1 + math.sqrt(1 + 4 * (nodes_queued - 1)))
+        return round(raw, 3)
 
-    power = 1.0 / path_len
+    power = 1.0 / (path_len + 1)
     # Letting nodes_queued be S, and path_len be d, we're trying to solve for the value of r in the following:
-    # S = r * ( r ^ (d-1) - 1 ) / ( r - 1 )
+    # S = 1 * ( r ^ (d + 1) - 1 ) / ( r - 1 )
     # Applying some sixth-grade algebra:
-    # Sr - S = r * ( r ^ (d-1) - 1 )
-    # Sr - S = r ^ d - r
-    # Sr - S + r = r ^ d
-    # r ^ d = Sr - S + r
+    # Sr - S = 1 * ( r ^ (d + 1) - 1 )
+    # Sr - S = r ^ (d + 1) - 1
+    # Sr - S + 1 = r ^ (d + 1)
+    # r ^ (d + 1) = Sr - S + 1
     #
     # That final line is an ideal form to apply fixed-point iteration to, starting with an initial guess for r
     # and feeding it into:
-    # r* = (Sr - S + r) ^ (1/d)
+    # r* = (Sr - S + 1) ^ (1/(d + 1))
     # iterating until r* and r sufficiently converge.
 
     old = 0.0
     new = 0.5 * (1 + nodes_queued ** (power))
     while 0.001 <= abs(new - old):
         old = new
-        rhs = nodes_queued * new - nodes_queued + new
+        rhs = nodes_queued * new - nodes_queued + 1
         new = rhs ** (power)
 
     return round(new, 3)
 
 
+@cython.ccall
 @cython.boundscheck(False)
 @cython.initializedcheck(False)
 @cython.wraparound(False)
@@ -95,7 +103,7 @@ def astar_path_numpy(G, source: cython.int, target: cython.int, bulk_heuristic,
 @cython.nonecheck(False)
 @cython.wraparound(False)
 @cython.returns(tuple[list[cython.int], dict])
-def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]], diagnostics: cython.bint,
+def astar_numpy_core(G_succ: cython.list[cython.tuple[cnp.ndarray[cython.int], cnp.ndarray[cython.float]]], diagnostics: cython.bint,
                      distances: cnp.ndarray[cython.float], potentials: cnp.ndarray[cython.float], source: cython.int,
                      target: cython.int, upbound: cython.float) -> tuple[list, dict]:
     distances_view: cython.double[:] = distances
@@ -109,11 +117,10 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
     revisited: cython.int = 0
     g_exhausted: cython.int = 0
     f_exhausted: cython.int = 0
-    nu_upbound: cython.float
     new_upbounds: cython.int = 0
     targ_exhausted: cython.int = 0
     revis_continue: cython.int = 0
-    path: list[cython.int] = []
+    path: cython.list[cython.int] = []
     diag = {}
 
     act_nod: cython.int
@@ -125,14 +132,12 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
     counter: cython.int
 
     # Maps explored nodes to parent closest to the source.
-    explored: dict[cython.int, cython.int] = {}
+    explored: cython.dict[cython.int, cython.int] = {}
 
-    # The queue stores priority, cost to reach, node,  and parent.
-    # Uses Python heapq to keep in priority order.
-    # The nodes themselves, being integers, are directly comparable.
+    # The queue stores priority, cost to reach, node, and parent.
+    # Comparisons are handled by astar_t directly.
     queue: MinMaxHeap[astar_t] = MinMaxHeap[astar_t]()
-    queue.reserve(500)
-    queue.insert({'augment': potentials_view[source], 'dist': 0.0, 'curnode': source, 'parent': -1})
+    queue.insert({'augment': potentials_view[source], 'dist': 0.0, 'curnode': source, 'parent': ROOT_NODE})
 
     while 0 < queue.size():
         # Pop the smallest item from queue.
@@ -145,7 +150,7 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
         if curnode == target:
             path.append(curnode)
             node = parent
-            while node != -1:
+            while node != ROOT_NODE:
                 assert node not in path, "Node " + str(node) + " duplicated in discovered path"
                 path.append(node)
                 node = explored[node]
@@ -164,7 +169,7 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
         if curnode in explored:
             revisited += 1
             # Do not override the parent of starting node
-            if explored[curnode] == -1:
+            if explored[curnode] == ROOT_NODE:
                 continue
 
             # We've found a bad path, just move on
@@ -183,16 +188,6 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
         targdex = -1
 
         num_nodes = len(active_nodes_view)
-        for i in range(num_nodes):
-            act_nod = active_nodes_view[i]
-            if act_nod == target:
-                targdex = i
-                nu_upbound = dist + active_costs_view[targdex]
-                if nu_upbound < upbound:
-                    upbound = nu_upbound
-                    new_upbounds += 1
-                    distances_view[target] = upbound
-                break
 
         # Now unconditionally queue _all_ nodes that are still active, worrying about filtering out the bound-busting
         # neighbours later.
@@ -200,6 +195,8 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
         for i in range(num_nodes):
             act_nod = active_nodes_view[i]
             act_wt = dist + active_costs_view[i]
+            if target == act_nod:
+                targdex = i
             if act_wt > distances_view[act_nod]:
                 continue
             aug_wt = act_wt + potentials_view[act_nod]
@@ -208,6 +205,9 @@ def astar_numpy_core(G_succ: list[tuple[cnp.ndarray[cython.int], cnp.ndarray[cyt
             distances_view[act_nod] = act_wt
             queue.insert({'augment': aug_wt, 'dist': act_wt, 'curnode': act_nod, 'parent': curnode})
             counter += 1
+            if target == act_nod:
+                upbound = aug_wt
+                new_upbounds += 1
 
         if 0 == counter:
             if -1 != targdex:

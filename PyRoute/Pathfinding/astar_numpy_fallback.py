@@ -17,6 +17,7 @@ Compared to the ancestral networkx version of astar_path, this code:
             the corresponding node's distance label
 
 """
+import math
 from heapq import heappop, heappush, heapify
 
 import networkx as nx
@@ -28,26 +29,32 @@ float64max = np.finfo(np.float64).max
 def _calc_branching_factor(nodes_queued, path_len):
     if path_len == nodes_queued:
         return 1.0
+    if path_len == 1.0:
+        return nodes_queued - 1.0
+    if path_len == 2.0:
+        raw = 0.5 * (-1 + math.sqrt(1 + 4 * (nodes_queued - 1)))
+        return round(raw, 3)
 
+    power = 1.0 / (path_len + 1)
     # Letting nodes_queued be S, and path_len be d, we're trying to solve for the value of r in the following:
-    # S = r * ( r ^ (d-1) - 1 ) / ( r - 1 )
+    # S = 1 * ( r ^ (d + 1) - 1 ) / ( r - 1 )
     # Applying some sixth-grade algebra:
-    # Sr - S = r * ( r ^ (d-1) - 1 )
-    # Sr - S = r ^ d - r
-    # Sr - S + r = r ^ d
-    # r ^ d = Sr - S + r
+    # Sr - S = 1 * ( r ^ (d + 1) - 1 )
+    # Sr - S = r ^ (d + 1) - 1
+    # Sr - S + 1 = r ^ (d + 1)
+    # r ^ (d + 1) = Sr - S + 1
     #
     # That final line is an ideal form to apply fixed-point iteration to, starting with an initial guess for r
     # and feeding it into:
-    # r* = (Sr - S + r) ^ (1/d)
+    # r* = (Sr - S + 1) ^ (1/(d + 1))
     # iterating until r* and r sufficiently converge.
 
     old = 0
-    new = 0.5 * (1 + nodes_queued ** (1 / path_len))
+    new = 0.5 * (1 + nodes_queued ** power)
     while 0.001 <= abs(new - old):
         old = new
-        rhs = nodes_queued * new - nodes_queued + new
-        new = rhs ** (1 / path_len)
+        rhs = nodes_queued * new - nodes_queued + 1
+        new = rhs ** power
 
     return round(new, 3)
 

@@ -449,9 +449,9 @@ class testXRouteCalculation(baseTest):
         names = [
             ['Unchin', 'Glomar', 'Liasdi'],
             ['Unchin', 'Siam', 'Iimii', 'Resra', 'Tatsu', 'Mccandliss', 'Kiezupug', 'Lenashuuk', 'Shulasgu', 'Piileir',
-             'Vipac', 'Sennirak', 'Medurma'],
+             'Vipac', 'Shakhii', 'Medurma'],
             ['Liasdi', 'Vogasphere', 'Ishag', 'Arneua', 'Stonie', 'Seeplis', 'Citenic', 'Hypaethral', 'Khii', 'Aalimru',
-             'Sabhaash', 'Piileir', 'Vipac', 'Sennirak', 'Medurma']
+             'Sabhaash', 'Piileir', 'Vipac', 'Shakhii', 'Medurma']
         ]
         exp_trade = calc.calc_trade(25)
         distance = [8, 46, 50]
@@ -482,7 +482,7 @@ class testXRouteCalculation(baseTest):
                 if i < len(names[counter]) - 1:
                     first = item[2]['route'][i]
                     second = item[2]['route'][i + 1]
-                    self.assertEqual(exp_trade_count[first.name], first.tradeCount)
+                    self.assertEqual(exp_trade_count[first.name], first.tradeCount, first.name)
                     firstdex = first.index
                     seconddex = second.index
                     edge = galaxy.stars[firstdex][seconddex]

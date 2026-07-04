@@ -74,11 +74,11 @@ class testStatCalcRegression(baseTest):
         expected = {'TLmean': 0, 'TLstddev': 0, 'bases': NoNoneDefaultDict(int), 'code_counts': NoNoneDefaultDict(int),
                     'col_be': 6797.200000000001, 'economy': 381621, 'eti_cargo': 0,
                     'eti_pass': 0, 'eti_worlds': 0, 'gg_count': 93, 'im_be': 6196.989999999999, 'maxPop': 0,
-                    'maxPort': 'X', 'maxTL': 0, 'milBudget': 0, 'number': 122, 'passengers': 7817280, 'percapita': 4741,
+                    'maxPort': 'X', 'maxTL': 0, 'milBudget': 0, 'number': 122, 'passengers': 7814265, 'percapita': 4741,
                     'population': 80481, 'populations': NoNoneDefaultDict(Populations), 'port_size': NoNoneDefaultDict(int),
-                    'primary_count': NoNoneDefaultDict(int), 'shipyards': 81, 'spa_people': 23705,
-                    'star_count': NoNoneDefaultDict(int), 'stars': 172, 'sum_ru': 121636, 'trade': 143514360000,
-                    'tradeDton': 3273598, 'tradeDtonExt': 0, 'tradeExt': 0, 'tradeVol': 144545060000, 'worlds': 1272,
+                    'primary_count': NoNoneDefaultDict(int), 'shipyards': 81, 'spa_people': 23695,
+                    'star_count': NoNoneDefaultDict(int), 'stars': 172, 'sum_ru': 121636, 'trade': 143463760000,
+                    'tradeDton': 3272583, 'tradeDtonExt': 0, 'tradeExt': 0, 'tradeVol': 144494460000, 'worlds': 1272,
                     '__dict__': {}}
         expected['bases']['Military base'] = 18
         expected['bases']['Naval base'] = 23
@@ -92,7 +92,7 @@ class testStatCalcRegression(baseTest):
                                         'O:Troj-3215': 1, 'Oc': 2, 'Pa': 10, 'Ph': 6, 'Pi': 9, 'Po': 20, 'Pr': 6,
                                         'Pz': 9, 'Ri': 9, 'RsA': 1, 'RsB': 1, 'Tapa2': 1, 'Tapa3': 1, 'Tapa4': 1,
                                         'Tapa6': 1, 'Tapa8': 1, 'Va': 15, 'Wa': 3})
-        expected['port_size'].update({0: 22, 1: 28, 2: 41, 3: 24, 4: 4, 5: 3, 'A': 22, 'B': 61, 'C': 18, 'D': 11,
+        expected['port_size'].update({0: 22, 1: 29, 2: 40, 3: 24, 4: 4, 5: 3, 'A': 22, 'B': 61, 'C': 18, 'D': 11,
                                       'E': 8, 'X': 2})
         expected['primary_count'].update({'A': 3, 'F': 23, 'G': 43, 'K': 31, 'M': 22})
         expected['star_count'][1] = 74

@@ -16,9 +16,9 @@ float64max = np.finfo(np.float64).max
 
 class ApproximateShortestPathForestUnified:
 
-    def __init__(self, source, graph, epsilon, sources=None):
+    def __init__(self, source, graph, epsilon, sources=None, use_distances: bool = False):
         seeds, source, num_trees = self._get_sources(graph, source, sources)
-        self._graph = DistanceGraph(graph)
+        self._graph = DistanceGraph(graph, use_distances)
         self._source = source
         self._epsilon = epsilon
         # memoising this because its value gets used _heavily_ in lower bound calcs, called during heuristic generation
@@ -39,8 +39,7 @@ class ApproximateShortestPathForestUnified:
 
     def lower_bound(self, source, target) -> float:
         raw = np.abs(self._distances[source, :] - self._distances[target, :])
-        raw = raw[~np.isinf(raw)]
-        raw = raw[~np.isnan(raw)]
+        raw = raw[np.isfinite(raw)]
         if 0 == len(raw):
             return 0
         return np.max(raw)
