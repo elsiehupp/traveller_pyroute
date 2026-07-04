@@ -11,18 +11,22 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import requests
-from requests import Response
+from requests import Response, Session
+from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-def get_url(url: str, sector: str, suffix: str, output_dir: str) -> bool:
+def get_url(url: str, sector: str, suffix: str, output_dir: str, params: dict[str, str]) -> bool:
     try:
         retry_strategy = Retry(
             total=3,
             status_forcelist=[429, 500, 502, 503, 504],
-            method_whitelist=["HEAD", "GET", "OPTIONS"]
+            allowed_methods=["HEAD", "GET", "OPTIONS"]
         )
-        f: Response = requests.get(url, max_retries=retry_strategy, timeout=3)
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        s: Session = requests.Session()
+        s.mount('http://', adapter)
+        f: Response = s.get(url, timeout=3, params=params)
         f.raise_for_status()
     except urllib.error.HTTPError as ex:
         print("get URL failed: {} -> {}".format(url, ex))
@@ -60,19 +64,18 @@ if __name__ == '__main__':
         params = {'sector': sector, 'type': 'SecondSurvey', "milieu": args.milieu}
         if args.routes:
             params['routes'] = '1'
-        url_params = urllib.parse.urlencode(params)
-        url = 'http://www.travellermap.com/api/sec?%s' % url_params
+        url = 'http://www.travellermap.com/api/sec'
 
-        success = get_url(url, sector, 'sec', args.output_dir)
+        success = get_url(url, sector, 'sec', args.output_dir, params)
         if not success:
             print("Retrying " + sector)
-            get_url(url, sector, 'sec', args.output_dir)
+            get_url(url, sector, 'sec', args.output_dir, params)
 
-        url_params = urllib.parse.urlencode({'sector': sector, 'accept': 'text/xml'})
-        url = 'http://travellermap.com/api/metadata?%s' % url_params
-        success = get_url(url, sector, 'xml', args.output_dir)
+        params = {'sector': sector, 'accept': 'text/xml'}
+        url = 'http://travellermap.com/api/metadata'
+        success = get_url(url, sector, 'xml', args.output_dir, params)
         if not success:
             print("Retrying XML for " + sector)
-            get_url(url, sector, 'sec', args.output_dir)
+            get_url(url, sector, 'sec', args.output_dir, params)
 
         time.sleep(5)
