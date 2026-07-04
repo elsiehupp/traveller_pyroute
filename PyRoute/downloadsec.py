@@ -10,11 +10,14 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import requests
+import requests_toolbelt
+from requests import Response
 
 
 def get_url(url, sector, suffix, output_dir) -> bool:
     try:
-        f = urllib.request.urlopen(url)
+        f: Response = requests.get(url)
     except urllib.error.HTTPError as ex:
         print("get URL failed: {} -> {}".format(url, ex))
         return False
@@ -22,17 +25,12 @@ def get_url(url, sector, suffix, output_dir) -> bool:
         print("get URL failed: {} -> {}".format(url, ex))
         return False
 
-    encoding = f.headers['content-type'].split('charset=')[-1]
-    content = f.read()
-    if encoding == 'text/xml' or encoding == 'text/html':
-        ucontent = str(content, 'utf-8').replace('\r\n', '\n')
-    else:
-        ucontent = str(content, encoding).replace('\r\n', '\n')
-
+    # requests lib handles decoding automagically
+    content = f.text.replace('\r\n', '\n')
     path = os.path.join(output_dir, '%s.%s' % (sector, suffix))
 
     with codecs.open(path, 'wb', 'utf-8') as out:
-        out.write(ucontent)
+        out.write(content)
     f.close()
     return True
 
