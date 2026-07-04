@@ -11,13 +11,19 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import requests
-import requests_toolbelt
 from requests import Response
+from requests.packages.urllib3.util.retry import Retry
 
 
-def get_url(url, sector, suffix, output_dir) -> bool:
+def get_url(url: str, sector: str, suffix: str, output_dir: str) -> bool:
     try:
-        f: Response = requests.get(url)
+        retry_strategy = Retry(
+            total=3,
+            status_forcelist=[429, 500, 502, 503, 504],
+            method_whitelist=["HEAD", "GET", "OPTIONS"]
+        )
+        f: Response = requests.get(url, max_retries=retry_strategy, timeout=3)
+        f.raise_for_status()
     except urllib.error.HTTPError as ex:
         print("get URL failed: {} -> {}".format(url, ex))
         return False
