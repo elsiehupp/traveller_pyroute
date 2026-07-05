@@ -16,17 +16,8 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-def get_url(url: str, sector: str, suffix: str, output_dir: str, params: dict[str, str]) -> bool:
+def get_url(url: str, sector: str, suffix: str, output_dir: str, params: dict[str, str], s: Session) -> bool:
     try:
-        retry_strategy = Retry(
-            total=3,
-            status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["HEAD", "GET", "OPTIONS"]
-        )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        s: Session = requests.Session()
-        s.mount('http://', adapter)
-        s.mount('https://', adapter)
         f: Response = s.get(url, timeout=3, params=params)
         f.raise_for_status()
     except urllib.error.HTTPError as ex:
@@ -59,6 +50,16 @@ if __name__ == '__main__':
     with codecs.open(args.sector_list, 'r', encoding="utf-8") as f:
         sectorsList = [line for line in f]
 
+    retry_strategy = Retry(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS"]
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    s: Session = requests.Session()
+    s.mount('http://', adapter)
+    s.mount('https://', adapter)
+
     for raw_sector in sectorsList:
         sector = raw_sector.rstrip()
         print('Downloading %s' % sector)
@@ -67,16 +68,16 @@ if __name__ == '__main__':
             params['routes'] = '1'
         url = 'http://www.travellermap.com/api/sec'
 
-        success = get_url(url, sector, 'sec', args.output_dir, params)
+        success = get_url(url, sector, 'sec', args.output_dir, params, s)
         if not success:
             print("Retrying " + sector)
-            get_url(url, sector, 'sec', args.output_dir, params)
+            get_url(url, sector, 'sec', args.output_dir, params, s)
 
         params = {'sector': sector, 'accept': 'text/xml'}
         url = 'http://travellermap.com/api/metadata'
-        success = get_url(url, sector, 'xml', args.output_dir, params)
+        success = get_url(url, sector, 'xml', args.output_dir, params, s)
         if not success:
             print("Retrying XML for " + sector)
-            get_url(url, sector, 'sec', args.output_dir, params)
+            get_url(url, sector, 'sec', args.output_dir, params, s)
 
         time.sleep(5)
