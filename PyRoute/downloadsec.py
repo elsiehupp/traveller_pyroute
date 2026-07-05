@@ -26,6 +26,9 @@ def get_url(url: str, sector: str, suffix: str, output_dir: str, params: dict[st
     except urllib.error.URLError as ex:
         print("get URL failed: {} -> {}".format(url, ex))
         return False
+    except requests.exceptions.RetryError as ex:
+        print("get URL failed: {} -> {}".format(url, ex))
+        return False
 
     # requests lib handles decoding automagically
     content = f.text.replace('\r\n', '\n')
@@ -68,16 +71,10 @@ if __name__ == '__main__':
             params['routes'] = '1'
         url = 'http://www.travellermap.com/api/sec'
 
-        success = get_url(url, sector, 'sec', args.output_dir, params, s)
-        if not success:
-            print("Retrying " + sector)
-            get_url(url, sector, 'sec', args.output_dir, params, s)
+        get_url(url, sector, 'sec', args.output_dir, params, s)
 
         params = {'sector': sector, 'accept': 'text/xml'}
         url = 'http://travellermap.com/api/metadata'
-        success = get_url(url, sector, 'xml', args.output_dir, params, s)
-        if not success:
-            print("Retrying XML for " + sector)
-            get_url(url, sector, 'sec', args.output_dir, params, s)
+        get_url(url, sector, 'xml', args.output_dir, params, s)
 
         time.sleep(5)
