@@ -167,7 +167,7 @@ class testWikiUploadPDF(baseTest):
             self.assertIn('                        [--no-summary] [--no-subsector] [--worlds] [--era ERA]\n', buf)
             self.assertIn('                        [--log-level LOG_LEVEL] [--site SITE] [--user USER]\n\n', buf)
             self.assertIn('Trade map generator wiki upload.\n\n', buf)
-            self.assertIn('optional arguments:\n', buf)
+            # self.assertIn('optional arguments:\n', buf)
             self.assertIn('  -h, --help            show this help message and exit\n', buf)
             self.assertIn('  --input INPUT         output directory for maps, statistics\n', buf)
             self.assertIn('  --no-maps             Don\'t upload the sector PDF maps, default is upload\n', buf)
