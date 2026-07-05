@@ -26,6 +26,7 @@ def get_url(url: str, sector: str, suffix: str, output_dir: str, params: dict[st
         adapter = HTTPAdapter(max_retries=retry_strategy)
         s: Session = requests.Session()
         s.mount('http://', adapter)
+        s.mount('https://', adapter)
         f: Response = s.get(url, timeout=3, params=params)
         f.raise_for_status()
     except urllib.error.HTTPError as ex:
