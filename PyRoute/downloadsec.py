@@ -8,12 +8,10 @@ import codecs
 import os
 import time
 import urllib.error
-import urllib.parse
-import urllib.request
 import requests
 from requests import Response, Session
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from requests.packages.urllib3.util.retry import Retry  # type: ignore
 
 
 def get_url(url: str, sector: str, suffix: str, output_dir: str, params: dict[str, str], s: Session) -> bool:
@@ -71,7 +69,10 @@ if __name__ == '__main__':
             params['routes'] = '1'
         url = 'http://www.travellermap.com/api/sec'
 
-        get_url(url, sector, 'sec', args.output_dir, params, s)
+        if not get_url(url, sector, 'sec', args.output_dir, params, s):
+            # If we didn't get the .sec file, don't bother trying to get the xml
+            time.sleep(5)
+            continue
 
         params = {'sector': sector, 'accept': 'text/xml'}
         url = 'http://travellermap.com/api/metadata'
