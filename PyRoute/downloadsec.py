@@ -8,31 +8,32 @@ import codecs
 import os
 import time
 import urllib.error
-import urllib.parse
-import urllib.request
+import requests
+from requests import Response, Session
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry  # type: ignore
 
 
-def get_url(url, sector, suffix, output_dir) -> bool:
+def get_url(url: str, sector: str, suffix: str, output_dir: str, params: dict[str, str], s: Session) -> bool:
     try:
-        f = urllib.request.urlopen(url)
+        f: Response = s.get(url, timeout=3, params=params)
+        f.raise_for_status()
     except urllib.error.HTTPError as ex:
         print("get URL failed: {} -> {}".format(url, ex))
         return False
     except urllib.error.URLError as ex:
         print("get URL failed: {} -> {}".format(url, ex))
         return False
+    except requests.exceptions.RetryError as ex:
+        print("get URL failed: {} -> {}".format(url, ex))
+        return False
 
-    encoding = f.headers['content-type'].split('charset=')[-1]
-    content = f.read()
-    if encoding == 'text/xml' or encoding == 'text/html':
-        ucontent = str(content, 'utf-8').replace('\r\n', '\n')
-    else:
-        ucontent = str(content, encoding).replace('\r\n', '\n')
-
+    # requests lib handles decoding automagically
+    content = f.text.replace('\r\n', '\n')
     path = os.path.join(output_dir, '%s.%s' % (sector, suffix))
 
     with codecs.open(path, 'wb', 'utf-8') as out:
-        out.write(ucontent)
+        out.write(content)
     f.close()
     return True
 
@@ -50,25 +51,31 @@ if __name__ == '__main__':
     with codecs.open(args.sector_list, 'r', encoding="utf-8") as f:
         sectorsList = [line for line in f]
 
+    retry_strategy = Retry(
+        total=3,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS"]
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    s: Session = requests.Session()
+    s.mount('http://', adapter)
+    s.mount('https://', adapter)
+
     for raw_sector in sectorsList:
         sector = raw_sector.rstrip()
         print('Downloading %s' % sector)
         params = {'sector': sector, 'type': 'SecondSurvey', "milieu": args.milieu}
         if args.routes:
             params['routes'] = '1'
-        url_params = urllib.parse.urlencode(params)
-        url = 'http://www.travellermap.com/api/sec?%s' % url_params
+        url = 'http://www.travellermap.com/api/sec'
 
-        success = get_url(url, sector, 'sec', args.output_dir)
-        if not success:
-            print("Retrying " + sector)
-            get_url(url, sector, 'sec', args.output_dir)
+        if not get_url(url, sector, 'sec', args.output_dir, params, s):
+            # If we didn't get the .sec file, don't bother trying to get the xml
+            time.sleep(5)
+            continue
 
-        url_params = urllib.parse.urlencode({'sector': sector, 'accept': 'text/xml'})
-        url = 'http://travellermap.com/api/metadata?%s' % url_params
-        success = get_url(url, sector, 'xml', args.output_dir)
-        if not success:
-            print("Retrying XML for " + sector)
-            get_url(url, sector, 'sec', args.output_dir)
+        params = {'sector': sector, 'accept': 'text/xml'}
+        url = 'http://travellermap.com/api/metadata'
+        get_url(url, sector, 'xml', args.output_dir, params, s)
 
         time.sleep(5)

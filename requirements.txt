@@ -19,8 +19,12 @@ pytest-randomly
 pytest-subtests
 pytest-timeout
 reportlab >= 4.1.0
+requests
+requests_toolbelt
+responses
 ruff >= 0.3.0
 setuptools
 types-networkx
 types-reportlab
+types-requests
 typing_extensions
