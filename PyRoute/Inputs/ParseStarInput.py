@@ -57,7 +57,7 @@ class ParseStarInput:
     valid_nobles = 'BCcDEeFfGH-'
 
     @staticmethod
-    def parse_line_into_star_core(star, line, sector, pop_code, ru_calc, fix_pop=False):
+    def parse_line_into_star_core(star, line, sector, pop_code, ru_calc, fix_pop=False, fix_econ=False):
         star.sector = sector
         star.logger.debug(line)
         data, is_station = ParseStarInput._unpack_starline(star, line, sector)
@@ -131,7 +131,7 @@ class ParseStarInput:
         star.starportBudget = 0
         star.starportPop = 0
 
-        star.tradeCode.check_world_codes(star, fix_pop=fix_pop)
+        star.tradeCode.check_world_codes(star, fix_pop=fix_pop, fix_econ=fix_econ)
 
         if data[5] and data[5].startswith('{'):
             raw_imp = data[5][1:-1].strip()

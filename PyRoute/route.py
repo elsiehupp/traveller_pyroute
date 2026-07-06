@@ -83,6 +83,8 @@ def process() -> None:
                            help="Turn on trade-route debugging")
     debugging.add_argument('--fix-pop', dest="fix_pop", default=False, action=argparse.BooleanOptionalAction,
                            help="Fix incorrect pop codes when loading stars")
+    debugging.add_argument('--fix-econ', dest="fix_econ", default=False, action=argparse.BooleanOptionalAction,
+                           help="Fix incorrect econ codes when loading stars")
 
     parser.add_argument('--version', action='version', version='%(prog)s 0.4')
     parser.add_argument('--log-level', default='INFO')
@@ -129,7 +131,7 @@ def process() -> None:
     readparms = ReadSectorOptions(sectors=sectors_list, pop_code=args.pop_code, ru_calc=args.ru_calc,
                                   route_reuse=args.route_reuse, trade_choice=args.routes, route_btn=args.route_btn,
                                   mp_threads=args.mp_threads, debug_flag=args.debug_flag, fix_pop=args.fix_pop,
-                                  deep_space=deep_space, map_type=args.map_type)
+                                  deep_space=deep_space, map_type=args.map_type, fix_econ=args.fix_econ)
     galaxy.read_sectors(readparms)
 
     # galaxy.read_sectors(sectors_list, args.pop_code, args.ru_calc,

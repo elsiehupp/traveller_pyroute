@@ -79,6 +79,7 @@ class Galaxy(AreaItem):
         pop_code = options.pop_code
         ru_calc = options.ru_calc
         fix_pop = options.fix_pop
+        fix_econ = options.fix_econ
         self._set_trade_object(route_reuse, trade_choice, route_btn, mp_threads, debug_flag)
         star_counter = 0
         loaded_sectors: set[str] = set()
@@ -91,9 +92,10 @@ class Galaxy(AreaItem):
             if 0 == len(headers):
                 continue
 
-            sec, raw_counter = ParseSectorInput.read_parsed_sector_to_sector_object(fix_pop, headers, loaded_sectors,
-                                                                                    logger, pop_code, ru_calc, sector,
-                                                                                    star_counter, starlines, self)
+            sec, raw_counter = ParseSectorInput.read_parsed_sector_to_sector_object(headers, loaded_sectors, logger,
+                                                                                    pop_code, ru_calc, sector,
+                                                                                    star_counter, starlines, self,
+                                                                                    fix_pop, fix_econ)
             if sec is None:
                 continue
             star_counter = raw_counter
