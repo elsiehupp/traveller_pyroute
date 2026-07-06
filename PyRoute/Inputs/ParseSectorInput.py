@@ -136,7 +136,7 @@ class ParseSectorInput:
 
     @staticmethod
     def read_parsed_sector_to_sector_object(headers, loaded_sectors, logger, pop_code, ru_calc, sector, star_counter,
-                                            starlines, galaxy, fix_pop):
+                                            starlines, galaxy, fix_pop, fix_econ):
         logger.debug('reading %s ' % sector)
 
         sec = Sector(headers[3], headers[4])
@@ -154,7 +154,7 @@ class ParseSectorInput:
         ParseSectorInput.parse_subsectors(headers, sec.name, sec)
 
         for line in starlines:
-            star = Star.parse_line_into_star(line, sec, pop_code, ru_calc, fix_pop=fix_pop)
+            star = Star.parse_line_into_star(line, sec, pop_code, ru_calc, fix_pop=fix_pop, fix_econ=fix_econ)
             if star:
                 star_counter = galaxy.add_star_to_galaxy(star, star_counter, sec)
 
