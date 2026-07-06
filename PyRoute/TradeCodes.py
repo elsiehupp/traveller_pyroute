@@ -451,17 +451,21 @@ class TradeCodes(object):
             listmsg.append(msg)
         return False
 
-    def check_world_codes(self, star, msg=None, fix_pop=False) -> Union[bool, list]:
+    def check_world_codes(self, star, msg=None, fix_pop=False, fix_econ=False) -> Union[bool, list]:
         is_list = isinstance(msg, list)
         msg = msg if is_list else None
 
         check = True
         if fix_pop is True:
             self._fix_all_pop_codes(star)
+        if fix_econ is True:
+            self._fix_all_econ_codes(star)
 
         # Do the may-be-implied codes first, then everything else
-        check = self._check_econ_code(star, 'In', '012479ABC', None, '9ABCDEF', msg, "Hi") and check
         check = self._check_planet_code(star, 'As', '0', '0', '0', msg, 'Va') and check
+
+        if fix_econ is not True:
+            check = self._check_all_econ_codes(check, msg, star)
 
         check = self._check_planet_code(star, 'De', None, '23456789', '0', msg) and check
         check = self._check_planet_code(star, 'Fl', None, 'ABC', '123456789A', msg) and check
@@ -472,13 +476,6 @@ class TradeCodes(object):
         check = self._check_planet_code(star, 'Oc', 'ABCDEF', '3456789DEF', 'A', msg) and check
         check = self._check_planet_code(star, 'Va', None, '0', None, msg) and check
         check = self._check_planet_code(star, 'Wa', '3456789', '3456789DEF', 'A', msg) and check
-
-        check = self._check_econ_code(star, 'Pa', '456789', '45678', '48', msg) and check
-        check = self._check_econ_code(star, 'Ag', '456789', '45678', '567', msg) and check
-        check = self._check_econ_code(star, 'Na', '0123', '0123', '6789ABCDEF', msg) and check
-        check = self._check_econ_code(star, 'Pi', '012479', None, '78', msg) and check
-        check = self._check_econ_code(star, 'Pr', '68', None, '59', msg) and check
-        check = self._check_econ_code(star, 'Ri', '68', None, '678', msg) and check
 
         if fix_pop is not True:
             check = self._check_all_pop_codes(check, msg, star)
@@ -493,6 +490,17 @@ class TradeCodes(object):
         check = self._check_pop_code(star, 'Ni', '456', msg) and check
         check = self._check_pop_code(star, 'Ph', '8', msg) and check
         check = self._check_pop_code(star, 'Hi', '9ABCDEF', msg) and check
+        return check
+
+    def _check_all_econ_codes(self, check, msg, star):
+        check = self._check_econ_code(star, 'In', '012479ABC', None, '9ABCDEF', msg, "Hi") and check
+        check = self._check_econ_code(star, 'Pa', '456789', '45678', '48', msg) and check
+        check = self._check_econ_code(star, 'Ag', '456789', '45678', '567', msg) and check
+        check = self._check_econ_code(star, 'Na', '0123', '0123', '6789ABCDEF', msg) and check
+        check = self._check_econ_code(star, 'Pi', '012479', None, '78', msg) and check
+        check = self._check_econ_code(star, 'Pr', '68', None, '59', msg) and check
+        check = self._check_econ_code(star, 'Ri', '68', None, '678', msg) and check
+
         return check
 
     def owned_by(self, star) -> Union[str, None]:
@@ -778,13 +786,7 @@ class TradeCodes(object):
         self._fix_trade_code(star, 'Oc', 'ABCDEF', '3456789DEF', 'A')
         self._fix_trade_code(star, 'Va', None, '0', None)
 
-        self._fix_econ_code(star, 'Na', '0123', '0123', '6789ABCDEF')
-        self._fix_econ_code(star, 'Pi', '012479', None, '78')
-        self._fix_econ_code(star, 'Pa', '456789', '45678', '48')
-        self._fix_econ_code(star, 'Ag', '456789', '45678', '567')
-        self._fix_econ_code(star, 'Pr', '68', None, '59')
-        self._fix_econ_code(star, 'In', '012479ABC', None, '9ABCDEF')
-        self._fix_econ_code(star, 'Ri', '68', None, '678')
+        self._fix_all_econ_codes(star)
 
         self._fix_all_pop_codes(star)
         self._drop_invalid_trade_code('O:' + star.position)
@@ -849,6 +851,15 @@ class TradeCodes(object):
         self._fix_pop_code(star, 'Ni', '456')
         self._fix_pop_code(star, 'Ph', '8')
         self._fix_pop_code(star, 'Hi', '9ABCDEF')
+
+    def _fix_all_econ_codes(self, star):
+        self._fix_econ_code(star, 'In', '012479ABC', None, '9ABCDEF')
+        self._fix_econ_code(star, 'Na', '0123', '0123', '6789ABCDEF')
+        self._fix_econ_code(star, 'Pi', '012479', None, '78')
+        self._fix_econ_code(star, 'Pa', '456789', '45678', '48')
+        self._fix_econ_code(star, 'Ag', '456789', '45678', '567')
+        self._fix_econ_code(star, 'Pr', '68', None, '59')
+        self._fix_econ_code(star, 'Ri', '68', None, '678')
 
     def _drop_invalid_trade_code(self, targcode):
         self.codes = [code for code in self.codes if code != targcode]
