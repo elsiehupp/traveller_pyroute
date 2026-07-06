@@ -79,7 +79,7 @@ class Galaxy(AreaItem):
         pop_code = options.pop_code
         ru_calc = options.ru_calc
         fix_pop = options.fix_pop
-        fix_econ = False
+        fix_econ = options.fix_econ
         self._set_trade_object(route_reuse, trade_choice, route_btn, mp_threads, debug_flag)
         star_counter = 0
         loaded_sectors: set[str] = set()

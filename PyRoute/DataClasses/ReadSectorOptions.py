@@ -17,5 +17,6 @@ class ReadSectorOptions:
     mp_threads: int = 1
     debug_flag: bool = False
     fix_pop: bool = False
+    fix_econ: bool = False
     deep_space: dict = None
     map_type: str = 'classic'
