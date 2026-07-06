@@ -91,9 +91,10 @@ class Galaxy(AreaItem):
             if 0 == len(headers):
                 continue
 
-            sec, raw_counter = ParseSectorInput.read_parsed_sector_to_sector_object(fix_pop, headers, loaded_sectors,
-                                                                                    logger, pop_code, ru_calc, sector,
-                                                                                    star_counter, starlines, self)
+            sec, raw_counter = ParseSectorInput.read_parsed_sector_to_sector_object(headers, loaded_sectors, logger,
+                                                                                    pop_code, ru_calc, sector,
+                                                                                    star_counter, starlines, self,
+                                                                                    fix_pop)
             if sec is None:
                 continue
             star_counter = raw_counter

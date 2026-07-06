@@ -135,8 +135,8 @@ class ParseSectorInput:
         return sector
 
     @staticmethod
-    def read_parsed_sector_to_sector_object(fix_pop, headers, loaded_sectors, logger, pop_code, ru_calc, sector,
-                                            star_counter, starlines, galaxy):
+    def read_parsed_sector_to_sector_object(headers, loaded_sectors, logger, pop_code, ru_calc, sector, star_counter,
+                                            starlines, galaxy, fix_pop):
         logger.debug('reading %s ' % sector)
 
         sec = Sector(headers[3], headers[4])
